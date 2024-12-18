@@ -1,31 +1,30 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/api'; // Backend endpoint'i
+const API_URL = '/api';
 
-export const fetchArizalar = async (params = {}) => {
-    return await axios.get(`${API_URL}/arizalar`, { params });
-};
+// Login
+export const loginUser = (credentials) => axios.post(`${API_URL}/auth`, credentials);
 
-export const fetchArizaById = async (id) => {
-    return await axios.get(`${API_URL}/arizalar/${id}`);
-};
+// Tüm arızaları getir
+export const fetchArizalar = (params) => axios.get(`${API_URL}/arizalar`, { params });
 
-export const createAriza = async (data) => {
-    return await axios.post(`${API_URL}/arizalar`, data);
-};
+// Tek bir arıza kaydını getir
+export const fetchArizaById = (id) => axios.get(`${API_URL}/arizalar/${id}`);
 
-export const updateAriza = async (id, data) => {
-    return await axios.put(`${API_URL}/arizalar/${id}`, data);
-};
+// Yeni arıza oluştur
+export const createAriza = (data) => axios.post(`${API_URL}/arizalar`, data);
 
-export const deleteAriza = async (id) => {
-    return await axios.delete(`${API_URL}/arizalar/${id}`);
-};
+// Arıza güncelle
+export const updateAriza = (id, data) => axios.put(`${API_URL}/arizalar/${id}`, data);
 
-export const uploadDokuman = async (id, file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return await axios.post(`${API_URL}/arizalar/${id}/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-    });
+// Arıza sil
+export const deleteAriza = (id) => axios.delete(`${API_URL}/arizalar/${id}`);
+
+// Dosya yükle
+export const uploadDokuman = (id, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return axios.post(`${API_URL}/arizalar/${id}/upload`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 };
