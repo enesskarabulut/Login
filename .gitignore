@@ -1,0 +1,47 @@
+# Node.js ve React
+/node_modules
+/build
+/.pnp
+.pnp.js
+
+# Vercel
+.vercel
+.vercel/**
+
+# Ortam Değişkenleri
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Log Dosyaları
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS Spesifik Dosyalar
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+._*
+
+# IDE ve Editör Dosyaları
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Diğer
+*.lock
+*.bak
+*.tmp
+*.swp
+
+# Coverage Reports
+coverage/
+
+# Test Output
+/jest/
