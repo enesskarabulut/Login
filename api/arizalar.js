@@ -9,14 +9,12 @@ const {
   
   module.exports = async (req, res) => {
     const { method } = req;
+    const { id } = req.query; // Query parametresinden ID alıyoruz
   
     try {
-      // GET: Tüm arızaları getir veya tek bir arıza detayı getir
+      // GET: Tüm arızaları veya tek bir arıza detayını getir
       if (method === 'GET') {
-        const { id, status } = req.query;
-  
         if (id) {
-          // Tek bir arıza detayı
           const ariza = await getArizaById(id);
           if (!ariza) {
             return res.status(404).json({ message: 'Arıza bulunamadı.' });
@@ -24,60 +22,80 @@ const {
           return res.json(ariza);
         }
   
-        // Tüm arızaları getir
+        const { status } = req.query;
         const arizalar = await getArizalar(status);
         return res.json(arizalar);
       }
   
       // POST: Yeni arıza oluştur
-      if (method === 'POST') {
-        const { adres, usta, status, ücret, detay } = req.body;
+if (method === 'POST') {
+    const { adres, usta, status, ücret, detay, tarih } = req.body;
   
-        if (!adres || !usta) {
-          return res.status(400).json({ message: 'Adres ve usta bilgisi zorunludur.' });
-        }
+    if (!adres || !usta) {
+      return res.status(400).json({ message: 'Adres ve usta bilgisi zorunludur.' });
+    }
   
-        const yeniAriza = await createNewAriza({ adres, usta, status, ücret, detay });
-        return res.status(201).json(yeniAriza);
-      }
+    if (status === 'ileri tarihli' && !tarih) {
+      return res.status(400).json({ message: 'İleri tarihli arıza için tarih zorunludur.' });
+    }
+  
+    const yeniAriza = await createNewAriza({
+      adres,
+      usta,
+      status: status || 'işleme alındı',
+      ücret,
+      detay,
+      tarih: status === 'ileri tarihli' ? tarih : null, // Tarih kontrolü
+    });
+  
+    return res.status(201).json(yeniAriza);
+  }
   
       // PUT: Arıza güncelle
-      if (method === 'PUT') {
-        const { id } = req.query;
-        const { adres, usta, status, ücret, detay } = req.body;
+if (method === 'PUT') {
+    const { adres, usta, status, ücret, detay, tarih } = req.body;
   
-        if (!id) {
-          return res.status(400).json({ message: 'Arıza ID gereklidir.' });
-        }
+    if (!id) {
+      return res.status(400).json({ message: 'Arıza ID gereklidir.' });
+    }
   
-        const updatedAriza = await updateArizaRecord(id, { adres, usta, status, ücret, detay });
-        if (!updatedAriza) {
-          return res.status(404).json({ message: 'Güncellenecek arıza bulunamadı.' });
-        }
+    if (status === 'ileri tarihli' && !tarih) {
+      return res.status(400).json({ message: 'İleri tarihli arıza için tarih zorunludur.' });
+    }
   
-        return res.json(updatedAriza);
-      }
+    const updatedAriza = await updateArizaRecord(id, {
+      adres,
+      usta,
+      status,
+      ücret,
+      detay,
+      tarih: status === 'ileri tarihli' ? tarih : null, // Tarih kontrolü
+    });
   
-      // DELETE: Arıza sil
+    if (!updatedAriza) {
+      return res.status(404).json({ message: 'Güncellenecek arıza bulunamadı.' });
+    }
+  
+    return res.status(200).json(updatedAriza);
+  }
+  
       if (method === 'DELETE') {
-        const { id } = req.query;
-  
+        const { id } = req.query; // Query parametresinden ID alınıyor
         if (!id) {
           return res.status(400).json({ message: 'Arıza ID gereklidir.' });
         }
-  
+      
         const deletedAriza = await deleteArizaById(id);
         if (!deletedAriza) {
           return res.status(404).json({ message: 'Silinecek arıza bulunamadı.' });
         }
-  
+      
         return res.json({ message: 'Arıza başarıyla silindi.' });
       }
   
       // PATCH: Arızaya döküman ekle
       if (method === 'PATCH') {
-        const { id } = req.query;
-        const filePath = req.body.filePath; // Dosya yolu
+        const { filePath } = req.body;
   
         if (!id || !filePath) {
           return res.status(400).json({ message: 'Arıza ID ve dosya yolu gereklidir.' });

@@ -3,12 +3,13 @@ import React, { useState } from 'react';
 function ArizaFilter({ onFilter }) {
   const [status, setStatus] = useState('');
 
-  const handleFilter = () => {
+  const handleFilter = (e) => {
+    e.preventDefault();
     onFilter(status);
   };
 
   return (
-    <div className="filter-container">
+    <form onSubmit={handleFilter} className="filter-container">
       <div style={{ flex: 1 }}>
         <label>Status Filtre:</label>
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -19,8 +20,8 @@ function ArizaFilter({ onFilter }) {
           <option value="ileri tarihli">ileri tarihli</option>
         </select>
       </div>
-      <button onClick={handleFilter}>Filtrele</button>
-    </div>
+      <button type="submit">Filtrele</button>
+    </form>
   );
 }
 

@@ -1,35 +1,40 @@
 import React, { useState } from 'react';
 
 function ArizaForm({ onCreate }) {
-  const [adres, setAdres] = useState('');
-  const [usta, setUsta] = useState('');
-  const [status, setStatus] = useState('işleme alındı');
-  const [ucret, setUcret] = useState('');
-  const [tarih, setTarih] = useState('');
-  const [detay, setDetay] = useState('');
+  const [formData, setFormData] = useState({
+    adres: '',
+    usta: '',
+    status: 'işleme alındı',
+    ucret: '',
+    tarih: '',
+    detay: '',
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Yeni arıza verilerini oluştur
     const arizaData = {
-      adres,
-      usta,
-      status,
-      ucret: ucret ? Number(ucret) : null,
-      detay,
-      tarih: status === 'ileri tarihli' ? tarih : null,
+      ...formData,
+      ucret: formData.ucret ? Number(formData.ucret) : null,
+      tarih: formData.status === 'ileri tarihli' ? formData.tarih : null,
     };
 
     onCreate(arizaData);
 
     // Formu sıfırla
-    setAdres('');
-    setUsta('');
-    setStatus('işleme alındı');
-    setUcret('');
-    setTarih('');
-    setDetay('');
+    setFormData({
+      adres: '',
+      usta: '',
+      status: 'işleme alındı',
+      ucret: '',
+      tarih: '',
+      detay: '',
+    });
   };
 
   return (
@@ -38,15 +43,15 @@ function ArizaForm({ onCreate }) {
       <form onSubmit={handleSubmit}>
         <div>
           <label>Adres:</label>
-          <input value={adres} onChange={(e) => setAdres(e.target.value)} required />
+          <input name="adres" value={formData.adres} onChange={handleChange} required />
         </div>
         <div>
           <label>Usta:</label>
-          <input value={usta} onChange={(e) => setUsta(e.target.value)} required />
+          <input name="usta" value={formData.usta} onChange={handleChange} required />
         </div>
         <div>
           <label>Status:</label>
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <select name="status" value={formData.status} onChange={handleChange}>
             <option value="işleme alındı">işleme alındı</option>
             <option value="tamamlandı">tamamlandı</option>
             <option value="ertelendi">ertelendi</option>
@@ -56,19 +61,21 @@ function ArizaForm({ onCreate }) {
         <div>
           <label>Ücret:</label>
           <input
+            name="ucret"
             type="number"
             step="0.01"
-            value={ucret}
-            onChange={(e) => setUcret(e.target.value)}
+            value={formData.ucret}
+            onChange={handleChange}
           />
         </div>
-        {status === 'ileri tarihli' && (
+        {formData.status === 'ileri tarihli' && (
           <div>
             <label>Tarih:</label>
             <input
+              name="tarih"
               type="date"
-              value={tarih}
-              onChange={(e) => setTarih(e.target.value)}
+              value={formData.tarih}
+              onChange={handleChange}
               required
             />
           </div>
@@ -76,8 +83,9 @@ function ArizaForm({ onCreate }) {
         <div>
           <label>Detay:</label>
           <textarea
-            value={detay}
-            onChange={(e) => setDetay(e.target.value)}
+            name="detay"
+            value={formData.detay}
+            onChange={handleChange}
             rows={3}
           ></textarea>
         </div>
