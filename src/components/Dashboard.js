@@ -1,6 +1,6 @@
-// src/components/Dashboard.js
 import React from 'react';
 import { removeToken } from '../utils/auth';
+import '../styles/Auth.css';
 
 const Dashboard = ({ onLogout }) => {
     const handleLogout = () => {
@@ -9,7 +9,7 @@ const Dashboard = ({ onLogout }) => {
     };
 
     return (
-        <div>
+        <div className="auth-container">
             <h2>Dashboard</h2>
             <p>Hoş geldiniz!</p>
             <button onClick={handleLogout}>Logout</button>

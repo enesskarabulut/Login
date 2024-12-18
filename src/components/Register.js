@@ -1,12 +1,17 @@
-// src/components/Register.js
+/*
 import React, { useState } from 'react';
 import axios from 'axios';
+import InputField from './InputField';
+import '../styles/Auth.css';
 
 const Register = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [formData, setFormData] = useState({ username: '', password: '' });
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -14,39 +19,36 @@ const Register = () => {
         setMessage('');
 
         try {
-            const response = await axios.post('/api/register', { username, password });
+            const response = await axios.post('/api/register', formData);
             setMessage(response.data.message);
-            setUsername('');
-            setPassword('');
+            setFormData({ username: '', password: '' });
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed.');
         }
     };
 
     return (
-        <div>
+        <div className="auth-container">
             <h2>Register</h2>
-            {message && <p style={{ color: 'green' }}>{message}</p>}
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {message && <p className="success">{message}</p>}
+            {error && <p className="error">{error}</p>}
             <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Username:</label>
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Password:</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
+                <InputField
+                    label="Username"
+                    type="text"
+                    value={formData.username}
+                    onChange={handleChange}
+                    required
+                    name="username"
+                />
+                <InputField
+                    label="Password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    name="password"
+                />
                 <button type="submit">Register</button>
             </form>
         </div>
@@ -54,3 +56,4 @@ const Register = () => {
 };
 
 export default Register;
+*/

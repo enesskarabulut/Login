@@ -1,15 +1,13 @@
-// src/App.js
 import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
-import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import { getToken } from './utils/auth';
 import jwtDecode from 'jwt-decode';
 
 const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [showRegister, setShowRegister] = useState(false);
 
+    // Token kontrolü
     useEffect(() => {
         const token = getToken();
         if (token) {
@@ -27,10 +25,12 @@ const App = () => {
         }
     }, []);
 
+    // Kullanıcı login olduğunda çağrılır
     const handleLogin = () => {
         setIsAuthenticated(true);
     };
 
+    // Kullanıcı logout olduğunda çağrılır
     const handleLogout = () => {
         setIsAuthenticated(false);
     };
@@ -38,24 +38,10 @@ const App = () => {
     return (
         <div style={{ maxWidth: '400px', margin: '0 auto', padding: '20px' }}>
             {!isAuthenticated ? (
-                showRegister ? (
-                    <>
-                        <Register />
-                        <p>
-                            Zaten hesabınız var mı?{' '}
-                            <button onClick={() => setShowRegister(false)}>Login</button>
-                        </p>
-                    </>
-                ) : (
-                    <>
-                        <Login onLogin={handleLogin} />
-                        <p>
-                            Henüz hesabınız yok mu?{' '}
-                            <button onClick={() => setShowRegister(true)}>Register</button>
-                        </p>
-                    </>
-                )
+                // Kullanıcı login olmadığında Login bileşeni gösterilir
+                <Login onLogin={handleLogin} />
             ) : (
+                // Kullanıcı login olduğunda Dashboard gösterilir
                 <Dashboard onLogout={handleLogout} />
             )}
         </div>
