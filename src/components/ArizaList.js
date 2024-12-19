@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function ArizaList({ arizalar, onSelect, onDelete, loading }) {
+function ArizaList({ arizalar, onSelect, onDelete }) {
   const [loadingId, setLoadingId] = useState(null); // Silme sırasında loading ID'sini tutar
   const [error, setError] = useState(null); // Hata mesajını tutar
 
@@ -43,7 +43,7 @@ function ArizaList({ arizalar, onSelect, onDelete, loading }) {
           </tr>
         </thead>
         <tbody>
-          {loading ? <p className='loadingMessage'>Yükleniyor..</p>: arizalar.map((ariza) => (
+          {arizalar.map((ariza) => (
             <tr key={ariza.id}>
               <td onClick={() => onSelect(ariza.id)} style={{ cursor: 'pointer' }}>
                 {ariza.id}
@@ -57,18 +57,15 @@ function ArizaList({ arizalar, onSelect, onDelete, loading }) {
               <td>{ariza.detay || '-'}</td>
               {/* Dökümanlar alanı */}
               <td>
-                {ariza.dokumanlar && ariza.dokumanlar.length > 0 ? (
-                  ariza.dokumanlar.map((doc, index) => (
-                    <div key={index}>
-                      <a
-                        href={doc} // Dökümanın URL'si veya yolu
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {`Döküman ${index + 1}`}
-                      </a>
-                    </div>
-                  ))
+                {ariza.dokuman ? (
+                  <a
+                    href={ariza.dokuman}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: '#007BFF', textDecoration: 'underline' }}
+                  >
+                    Dökümanı Görüntüle
+                  </a>
                 ) : (
                   '-'
                 )}

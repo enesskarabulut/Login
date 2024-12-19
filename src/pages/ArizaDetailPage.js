@@ -10,6 +10,7 @@ function ArizaDetailPage({ id, loadArizalar, onClose }) {
   const [tarih, setTarih] = useState('');
   const [detay, setDetay] = useState('');
   const [file, setFile] = useState(null);
+  const [dokumanlar, setDokumanlar] = useState([]); // Dokümanların listesi
 
   // Arıza verisini yükle
   const loadAriza = async () => {
@@ -21,11 +22,14 @@ function ArizaDetailPage({ id, loadArizalar, onClose }) {
     setUcret(data.ucret || '');
     setTarih(data.tarih || '');
     setDetay(data.detay || '');
+
+    // Dokümanlar alanını liste formatına çevir
+    const dokumanField = data.dokuman || [];
+    setDokumanlar(Array.isArray(dokumanField) ? dokumanField : [dokumanField]);
   };
 
   useEffect(() => {
     loadAriza();
-    // eslint-disable-next-line
   }, [id]);
 
   const handleUpdate = async () => {
@@ -40,8 +44,15 @@ function ArizaDetailPage({ id, loadArizalar, onClose }) {
 
   const handleUpload = async () => {
     if (file) {
-      await uploadDokuman(id, file);
-      loadAriza();
+      try {
+        const fileURL = await uploadDokuman(id, file);
+        console.log('Yüklenen dosya URL:', fileURL);
+        alert('Dosya başarıyla yüklendi!');
+        loadAriza(); // Yeniden yükleme
+      } catch (error) {
+        console.error('Dosya yükleme hatası:', error.message);
+        alert('Dosya yüklenirken bir hata oluştu.');
+      }
     }
   };
 
@@ -87,6 +98,26 @@ function ArizaDetailPage({ id, loadArizalar, onClose }) {
       <h3>Doküman Yükle</h3>
       <input type="file" onChange={(e) => setFile(e.target.files[0])} />
       <button onClick={handleUpload}>Yükle</button>
+
+      <h3>Yüklenen Dokümanlar</h3>
+      {dokumanlar.length > 0 ? (
+        <ul>
+          {dokumanlar.map((doc, index) => (
+            <li key={index}>
+              <a
+                href={doc}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#007BFF', textDecoration: 'underline' }}
+              >
+                {`Doküman ${index + 1}`}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>Henüz yüklenmiş bir doküman yok.</p>
+      )}
 
       <hr />
       <button onClick={onClose}>Kapat</button>

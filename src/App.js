@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
-import ArizaPage from './pages/ArizaPage'; // ArizaPage import ediliyor
-import { getToken } from './utils/auth';
+import ArizaPage from './pages/ArizaPage';
+import LogoutButton from './components/LogoutButton'; // Logout butonu için ayrı component
+import { getToken, removeToken } from './utils/auth';
 import jwtDecode from 'jwt-decode';
 
 const App = () => {
@@ -16,10 +17,12 @@ const App = () => {
                     setIsAuthenticated(true);
                 } else {
                     setIsAuthenticated(false);
+                    removeToken();
                 }
             } catch (err) {
                 console.error('Invalid token', err);
                 setIsAuthenticated(false);
+                removeToken();
             }
         }
     }, []);
@@ -29,6 +32,7 @@ const App = () => {
     };
 
     const handleLogout = () => {
+        removeToken();
         setIsAuthenticated(false);
     };
 
@@ -37,7 +41,10 @@ const App = () => {
             {!isAuthenticated ? (
                 <Login onLogin={handleLogin} />
             ) : (
-                <ArizaPage /> 
+                <>
+                    <LogoutButton onLogout={handleLogout} />
+                    <ArizaPage />
+                </>
             )}
         </div>
     );

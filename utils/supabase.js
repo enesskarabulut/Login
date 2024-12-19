@@ -10,8 +10,8 @@ async function getArizalar(status) {
   let query = supabase.from('arizalar').select('*');
 
   if (status) {
-    const decodedStatus = decodeURIComponent(status).replace(/\+/g, ' '); // '+' karakterini boşluğa dönüştür
-    query = query.ilike('status', decodedStatus); // Harf duyarsız sorgu
+    const decodedStatus = decodeURIComponent(status).replace(/\+/g, ' ');
+    query = query.ilike('status', decodedStatus);
   }
 
   const { data, error } = await query;
@@ -21,7 +21,6 @@ async function getArizalar(status) {
   }
   return data;
 }
-
 
 // Tek bir arıza getirme
 async function getArizaById(id) {
@@ -37,12 +36,22 @@ async function createNewAriza(ariza) {
   return data;
 }
 
-// Arıza güncelleme
 async function updateArizaRecord(id, updates) {
-  const { data, error } = await supabase.from('arizalar').update(updates).eq('id', id).select().single();
-  if (error) return null;
+  const { data, error } = await supabase
+    .from('arizalar') // Tablonun adı
+    .update(updates)
+    .eq('id', id) // Doğru ID'yi eşle
+    .select()
+    .single(); // Tek bir satır döndürmesini sağlar
+
+  if (error) {
+    console.error('Güncelleme hatası:', error.message);
+    return null;
+  }
   return data;
 }
+
+
 
 // Arıza silme
 async function deleteArizaById(id) {
@@ -51,16 +60,43 @@ async function deleteArizaById(id) {
   return data;
 }
 
-// Arızaya döküman ekleme
-async function addDokumanToAriza(id, filePath) {
+// Arızaya doküman ekleme - Supabase Storage kullanarak
+async function addDokumanToAriza(id, file) {
   const ariza = await getArizaById(id);
   if (!ariza) return null;
 
-  const dokumanlar = ariza.dokumanlar || [];
-  dokumanlar.push(filePath);
+  const filePath = `uploads/arizalar/${id}/${Date.now()}_${file.originalname}`;
+  
+  // Dosyayı Supabase Storage'a yükle
+  const { error: uploadError } = await supabase.storage
+    .from('ariza-dokumanlar')
+    .upload(filePath, file.buffer);
 
-  const { data, error } = await supabase.from('arizalar').update({ dokumanlar }).eq('id', id).select().single();
-  if (error) return null;
+  if (uploadError) {
+    console.error('Dosya yükleme hatası:', uploadError.message);
+    throw new Error('Dosya yükleme başarısız.');
+  }
+
+  // Public URL'i al
+  const { data: publicUrlData } = supabase.storage.from('ariza-dokumanlar').getPublicUrl(filePath);
+  const publicUrl = publicUrlData.publicUrl;
+
+  // Doküman URL'sini arıza kaydına ekle
+  const dokumanlar = ariza.dokumanlar || [];
+  dokumanlar.push(publicUrl);
+
+  const { data, error } = await supabase
+    .from('arizalar')
+    .update({ dokumanlar })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Arıza kaydına doküman ekleme hatası:', error.message);
+    return null;
+  }
+
   return data;
 }
 
