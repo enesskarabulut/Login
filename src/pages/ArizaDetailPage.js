@@ -23,32 +23,39 @@ function ArizaDetailPage({ id, loadArizalar, onClose }) {
     setTarih(data.tarih || '');
     setDetay(data.detay || '');
 
-    // Dokümanlar alanını liste formatına çevir
-    const dokumanField = data.dokuman || [];
-    setDokumanlar(Array.isArray(dokumanField) ? dokumanField : [dokumanField]);
+    // Dokümanları kontrol edip liste formatına çevir
+    const dokumanField = data.dokuman || '';
+    setDokumanlar(dokumanField ? dokumanField.split(',') : []);
   };
 
   useEffect(() => {
     loadAriza();
   }, [id]);
 
+  // Arıza güncelleme işlemi
   const handleUpdate = async () => {
-    const arizaData = { adres, usta, status, ucret: ucret ? Number(ucret) : null, detay };
-    if (status === 'ileri tarihli') {
-      arizaData.tarih = tarih;
-    }
+    const arizaData = {
+      adres,
+      usta,
+      status,
+      ucret: ucret ? Number(ucret) : null,
+      detay,
+      tarih: status === 'ileri tarihli' ? tarih : null,
+    };
+
     await updateAriza(id, arizaData);
     loadAriza();
     loadArizalar();
   };
 
+  // Dosya yükleme işlemi
   const handleUpload = async () => {
     if (file) {
       try {
         const fileURL = await uploadDokuman(id, file);
         console.log('Yüklenen dosya URL:', fileURL);
         alert('Dosya başarıyla yüklendi!');
-        loadAriza(); // Yeniden yükleme
+        loadAriza(); // Yeniden yükle
       } catch (error) {
         console.error('Dosya yükleme hatası:', error.message);
         alert('Dosya yüklenirken bir hata oluştu.');
@@ -80,17 +87,29 @@ function ArizaDetailPage({ id, loadArizalar, onClose }) {
       </div>
       <div>
         <label>Ücret:</label>
-        <input type="number" value={ucret} onChange={(e) => setUcret(e.target.value)} />
+        <input
+          type="number"
+          value={ucret}
+          onChange={(e) => setUcret(e.target.value)}
+        />
       </div>
       {status === 'ileri tarihli' && (
         <div>
           <label>Tarih:</label>
-          <input type="date" value={tarih} onChange={(e) => setTarih(e.target.value)} />
+          <input
+            type="date"
+            value={tarih}
+            onChange={(e) => setTarih(e.target.value)}
+          />
         </div>
       )}
       <div>
         <label>Detay:</label>
-        <textarea value={detay} onChange={(e) => setDetay(e.target.value)} rows="3" />
+        <textarea
+          value={detay}
+          onChange={(e) => setDetay(e.target.value)}
+          rows="3"
+        />
       </div>
       <button onClick={handleUpdate}>Güncelle</button>
 
@@ -105,7 +124,7 @@ function ArizaDetailPage({ id, loadArizalar, onClose }) {
           {dokumanlar.map((doc, index) => (
             <li key={index}>
               <a
-                href={doc}
+                href={doc.trim()} // Boşluk temizleniyor
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: '#007BFF', textDecoration: 'underline' }}

@@ -80,7 +80,7 @@ module.exports = async (req, res) => {
     }
 
 
-// PATCH: Supabase Storage'a dosya yükle
+// PATCH: Supabase Storage'a dosya yükle ve mevcut dökümanları güncelle
 if (method === 'PATCH') {
   const { file } = req.body;
 
@@ -88,34 +88,50 @@ if (method === 'PATCH') {
     return res.status(400).json({ message: 'Arıza ID ve dosya gereklidir.' });
   }
 
-  // Dosya yolu oluşturuluyor
-  const filePath = `uploads/${id}/${Date.now()}_${file.name}`;
+  try {
+    // 1. Dosya yolu oluşturuluyor
+    const filePath = `uploads/${id}/${Date.now()}_${file.name}`;
 
-  // Dosyayı Supabase Storage'a yükle
-  const { error: uploadError } = await supabase.storage
-    .from('ariza-dokumanlar') // Storage bucket adı
-    .upload(filePath, Buffer.from(file.content, 'base64'));
+    // 2. Dosyayı Supabase Storage'a yükle
+    const { error: uploadError } = await supabase.storage
+      .from('ariza-dokumanlar') // Storage bucket adı
+      .upload(filePath, Buffer.from(file.content, 'base64'));
 
-  if (uploadError) {
-    console.error('Dosya yükleme hatası:', uploadError.message);
-    return res.status(500).json({ message: 'Dosya yükleme başarısız.', error: uploadError.message });
+    if (uploadError) {
+      console.error('Dosya yükleme hatası:', uploadError.message);
+      return res.status(500).json({ message: 'Dosya yükleme başarısız.', error: uploadError.message });
+    }
+
+    // 3. Public URL'i manuel oluşturuyoruz
+    const publicURL = `${process.env.SUPABASE_URL}/storage/v1/object/public/ariza-dokumanlar/${filePath}`;
+    console.log('Public URL:', publicURL);
+
+    // 4. Mevcut dokümanları al, yeni URL'yi ekle
+    const updatedAriza = await getArizaById(id); // Mevcut kayıt
+    let dokumanlar = updatedAriza.dokuman ? updatedAriza.dokuman.split(',') : []; // Stringi diziye çevir
+
+    dokumanlar.push(publicURL); // Yeni URL'yi ekle
+    const updatedDokuman = dokumanlar.join(','); // Diziyi string olarak birleştir
+
+    // 5. Arıza kaydını güncelle
+    const updateResponse = await updateArizaRecord(id, { dokuman: updatedDokuman });
+
+    if (!updateResponse) {
+      console.error('Arıza güncelleme hatası.');
+      return res.status(500).json({ message: 'Döküman kaydedilemedi.' });
+    }
+
+    // 6. Yanıt dön
+    return res.json({
+      message: 'Dosya başarıyla yüklendi.',
+      dokumanURL: publicURL,
+      ariza: updateResponse,
+    });
+  } catch (error) {
+    console.error('Sunucu hatası:', error.message);
+    return res.status(500).json({ message: 'Sunucu hatası', error: error.message });
   }
-
-  // Public URL'i manuel oluşturuyoruz
-  const publicURL = `${process.env.SUPABASE_URL}/storage/v1/object/public/ariza-dokumanlar/${filePath}`;
-  console.log('Public URL:', publicURL);
-
-  // Arıza kaydını güncelle (dokuman URL'si ekleniyor)
-  const updatedAriza = await updateArizaRecord(id, { dokuman: publicURL });
-
-  if (!updatedAriza) {
-    return res.status(500).json({ message: 'Döküman kaydedilemedi.' });
-  }
-
-  // Yanıt dön
-  return res.json({ message: 'Dosya başarıyla yüklendi.', dokumanURL: publicURL, ariza: updatedAriza });
 }
-
 
     // DELETE: Arıza silme
     if (method === 'DELETE') {

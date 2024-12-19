@@ -58,14 +58,18 @@ function ArizaList({ arizalar, onSelect, onDelete }) {
               {/* Dökümanlar alanı */}
               <td>
                 {ariza.dokuman ? (
-                  <a
-                    href={ariza.dokuman}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: '#007BFF', textDecoration: 'underline' }}
-                  >
-                    Dökümanı Görüntüle
-                  </a>
+                  ariza.dokuman.split(',').map((link, index) => (
+                    <div key={index}>
+                      <a
+                        href={link.trim()} // Linkteki ekstra boşlukları temizle
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#007BFF', textDecoration: 'underline' }}
+                      >
+                        {`Doküman ${index + 1}`}
+                      </a>
+                    </div>
+                  ))
                 ) : (
                   '-'
                 )}
