@@ -20,7 +20,9 @@ function ArizaPage() {
 
   const handleFilter = (status) => {
     loadArizalar(status);
+    setSelectedArizaId(null); // Filtreleme yapıldığında arıza detayını kapat
   };
+  
 
   const handleCreate = async (arizaData) => {
     await createAriza(arizaData);

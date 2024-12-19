@@ -4,9 +4,17 @@ function ArizaList({ arizalar, onSelect, onDelete }) {
   const [loadingId, setLoadingId] = useState(null); // Silme sırasında loading ID'sini tutar
   const [error, setError] = useState(null); // Hata mesajını tutar
 
+  // Tarih formatlama fonksiyonu: Yıl-Ay-Gün => Gün.Ay.Yıl
+  const formatDateToString = (date) => {
+    if (!date) return '-';
+    const [year, month, day] = date.split('-');
+    return `${day}.${month}.${year}`;
+  };
+
   const handleDelete = async (id) => {
     setLoadingId(id); // Loading başlat
     setError(null); // Önceki hatayı temizle
+
     try {
       await onDelete(id); // Silme işlemini çağır
     } catch (err) {
@@ -30,6 +38,7 @@ function ArizaList({ arizalar, onSelect, onDelete }) {
             <th>Ücret</th>
             <th>Tarih</th>
             <th>Detay</th>
+            <th>Dökümanlar</th>
             <th>İşlem</th>
           </tr>
         </thead>
@@ -43,12 +52,31 @@ function ArizaList({ arizalar, onSelect, onDelete }) {
               <td>{ariza.usta}</td>
               <td>{ariza.status}</td>
               <td>{ariza.ucret || '-'}</td>
-              <td>{ariza.tarih || '-'}</td>
+              {/* Tarih formatlama */}
+              <td>{formatDateToString(ariza.tarih)}</td>
               <td>{ariza.detay || '-'}</td>
+              {/* Dökümanlar alanı */}
+              <td>
+                {ariza.dokumanlar && ariza.dokumanlar.length > 0 ? (
+                  ariza.dokumanlar.map((doc, index) => (
+                    <div key={index}>
+                      <a
+                        href={doc} // Dökümanın URL'si veya yolu
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {`Döküman ${index + 1}`}
+                      </a>
+                    </div>
+                  ))
+                ) : (
+                  '-'
+                )}
+              </td>
               <td>
                 <button
                   onClick={() => handleDelete(ariza.id)}
-                  disabled={loadingId === ariza.id} // Loading durumunda butonu devre dışı bırak
+                  disabled={loadingId === ariza.id}
                   style={{
                     backgroundColor: loadingId === ariza.id ? '#ccc' : '#e74c3c',
                     color: 'white',

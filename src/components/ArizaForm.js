@@ -10,18 +10,32 @@ function ArizaForm({ onCreate }) {
     detay: '',
   });
 
+  // Input değişimini yönetir
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Tarihi gün.ay.yıl formatına çevirir
+  const formatTarih = (tarih) => {
+    const date = new Date(tarih);
+    const gun = String(date.getDate()).padStart(2, '0'); // Gün (2 basamaklı)
+    const ay = String(date.getMonth() + 1).padStart(2, '0'); // Ay (0 tabanlı olduğu için +1)
+    const yil = date.getFullYear(); // Yıl
+    return `${gun}.${ay}.${yil}`; // Formatlanmış tarih
+  };
+
+  // Form submit edildiğinde çağrılır
   const handleSubmit = (e) => {
     e.preventDefault();
 
     const arizaData = {
       ...formData,
       ucret: formData.ucret ? Number(formData.ucret) : null,
-      tarih: formData.status === 'ileri tarihli' ? formData.tarih : null,
+      tarih:
+        formData.status === 'ileri tarihli' && formData.tarih
+          ? formatTarih(formData.tarih)
+          : null, // Formatlanmış tarih
     };
 
     onCreate(arizaData);
@@ -43,11 +57,21 @@ function ArizaForm({ onCreate }) {
       <form onSubmit={handleSubmit}>
         <div>
           <label>Adres:</label>
-          <input name="adres" value={formData.adres} onChange={handleChange} required />
+          <input
+            name="adres"
+            value={formData.adres}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div>
           <label>Usta:</label>
-          <input name="usta" value={formData.usta} onChange={handleChange} required />
+          <input
+            name="usta"
+            value={formData.usta}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div>
           <label>Status:</label>
