@@ -17,17 +17,6 @@ h1 {
     text-align: center;
 }
 
-h2 {
-    font-size: 20px;
-    color: #333;
-}
-
-label {
-    font-weight: bold;
-    display: inline-block;
-    margin-bottom: 5px;
-}
-
 button {
     background: #0066cc;
     color: #fff;
@@ -58,30 +47,10 @@ textarea {
 }
 
 /* Container Stilleri */
-.auth-container {
-    max-width: 400px;
-    margin: 50px auto;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+.app-container {
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.form-container {
-    margin-bottom: 20px;
-}
-
-.form-container input, .form-container button {
-    margin-top: 10px;
-}
-
-.header-title {
-    text-align: center;
-    margin-bottom: 20px;
-    font-size: 26px;
-    color: #0066cc;
-    font-weight: 700;
 }
 
 .card {
@@ -98,112 +67,32 @@ textarea {
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 6px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     padding: 15px;
+    overflow-x: auto; /* Yatay taşmaları engelle */
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
+}
+
+table th, table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+    word-wrap: break-word; /* Uzun metinlerin taşmasını önler */
 }
 
 table th {
     background-color: #f0f0f0;
     color: #333;
-    font-weight: bold;
-    text-align: left;
-    padding: 10px;
-    border-bottom: 2px solid #ccc;
-}
-
-table td {
-    padding: 10px;
-    border: 1px solid #ddd;
 }
 
 table tr:nth-child(even) {
     background-color: #f9f9f9;
 }
 
-.filter-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.filter-container select {
-    flex: 1;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-/* Özel Login Butonu Stili */
-.login-button {
-    display: block;
-    width: 100%;
-    max-width: 200px;
-    margin: 10px auto;
-    padding: 10px 15px;
-    font-size: 16px;
-    text-align: center;
-    background-color: #0066cc;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-.login-button:hover {
-    background-color: #005bb5;
-}
-
-.app-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f9f9f9;
-}
-
-.table-container, .card, .detail-container {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    padding: 15px;
-    margin-top: 20px;
-}
-
-.filter-container {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    align-items: center;
-}
-
-.filter-container label {
-    font-weight: bold;
-}
-
-button {
-    background-color: #0066cc;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #005bb5;
-}
-
+/* Logout Button */
 .logout-button {
     position: absolute;
     top: 10px;
@@ -211,39 +100,89 @@ button:hover {
     padding: 8px 15px;
     background-color: #e74c3c;
     color: white;
-    border: none;
     border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.3s ease;
-  }
-  
-  .logout-button:hover {
-    background-color: #c0392b;
-  }
+}
 
-  .Anasayfa-container {
+.logout-button:hover {
+    background-color: #c0392b;
+}
+
+/* Anasayfa Menü */
+.Anasayfa-container {
     text-align: center;
     margin: 20px;
-  }
-  
-  .Anasayfa-menu {
+}
+
+.Anasayfa-menu {
     display: flex;
     justify-content: center;
     gap: 20px;
-    margin-bottom: 20px;
-  }
-  
-  .Anasayfa-menu button {
+    flex-wrap: wrap; /* Mobil uyumlu hale getir */
+}
+
+.Anasayfa-menu button {
     padding: 10px 20px;
     font-size: 16px;
-    cursor: pointer;
-  }
-  
-  .Anasayfa-content {
+}
+
+.Anasayfa-content {
     border: 1px solid #ccc;
     padding: 20px;
     border-radius: 8px;
-  }
-  
+}
 
+/* Filter Container */
+.filter-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Mobilde esneklik sağlar */
+}
+
+.filter-container label {
+    font-weight: bold;
+}
+
+/* Media Queries for Responsive Design */
+@media screen and (max-width: 768px) {
+    .app-container {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 20px;
+    }
+
+    button {
+        width: 100%; /* Butonlar tam genişlik olur */
+        margin-bottom: 10px;
+    }
+
+    .filter-container {
+        flex-direction: column; /* Filtreler dikey sıralanır */
+    }
+
+    table th, table td {
+        font-size: 12px;
+        padding: 8px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    h1 {
+        font-size: 18px;
+    }
+
+    .card, .table-container, .filter-container {
+        padding: 10px;
+    }
+
+    .Anasayfa-menu {
+        flex-direction: column;
+    }
+
+    button {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+}
