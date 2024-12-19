@@ -18,7 +18,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 module.exports = async (req, res) => {
     console.log('API /api/login called');
-    console.log('Request Method:', req.method);
 
     // Sadece POST isteklerine izin ver
     if (req.method !== 'POST') {
@@ -61,7 +60,7 @@ module.exports = async (req, res) => {
         );
 
         // Başarı yanıtı döndür
-        console.log('User authenticated:', username);
+        console.log('User authenticate:', username);
         return res.status(200).json({ token });
 
     } catch (err) {

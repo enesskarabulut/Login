@@ -34,16 +34,16 @@ export const loginUser = (credentials) =>
 export const fetchArizalar = (params) => api.get('/arizalar', { params });
 
 // Tek bir arıza kaydını getir
-export const fetchArizaById = (id) => api.get(`/arizalar/${id}`);
+export const fetchArizaById = (id) => api.get(`/arizalar?id=${id}`);
 
 // Yeni arıza oluştur
 export const createAriza = (data) => api.post('/arizalar', data);
 
 // Arıza güncelle
-export const updateAriza = (id, data) => api.put(`/arizalar/${id}`, data);
+export const updateAriza = (id, data) => api.put(`/arizalar?id=${id}`, data);
 
 // Arıza sil
-export const deleteAriza = (id) => api.delete(`/arizalar/${id}`);
+export const deleteAriza = (id) => api.delete(`/arizalar?id=${id}`);
 
 // Dosya yükle
 export const uploadDokuman = (id, file) => {

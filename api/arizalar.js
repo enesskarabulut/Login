@@ -10,8 +10,7 @@ const {
 
 module.exports = async (req, res) => {
   const { method } = req;
-  const { id } = req.query; // Query parametresinden ID alıyoruz
-
+  const { id } = req.query; // Query parametresinden ID alıyoruz 
   try {
     // Middleware ile token doğrulaması yap
     await new Promise((resolve, reject) => {
@@ -30,7 +29,6 @@ module.exports = async (req, res) => {
         }
         return res.json(ariza);
       }
-
       const { status } = req.query;
       const arizalar = await getArizalar(status);
       return res.json(arizalar);
@@ -38,8 +36,7 @@ module.exports = async (req, res) => {
 
     // POST: Yeni arıza oluştur
     if (method === 'POST') {
-      const { adres, usta, status, ücret, detay, tarih } = req.body;
-
+      const { adres, usta, status, ucret, detay, tarih } = req.body;
       if (!adres || !usta) {
         return res.status(400).json({ message: 'Adres ve usta bilgisi zorunludur.' });
       }
@@ -52,7 +49,7 @@ module.exports = async (req, res) => {
         adres,
         usta,
         status: status || 'işleme alındı',
-        ücret,
+        ucret,
         detay,
         tarih: status === 'ileri tarihli' ? tarih : null,
       });
@@ -62,7 +59,7 @@ module.exports = async (req, res) => {
 
     // PUT: Arıza güncelle
     if (method === 'PUT') {
-      const { adres, usta, status, ücret, detay, tarih } = req.body;
+      const { adres, usta, status, ucret, detay, tarih } = req.body;
 
       if (!id) {
         return res.status(400).json({ message: 'Arıza ID gereklidir.' });
@@ -76,7 +73,7 @@ module.exports = async (req, res) => {
         adres,
         usta,
         status,
-        ücret,
+        ucret,
         detay,
         tarih: status === 'ileri tarihli' ? tarih : null,
       });
@@ -90,6 +87,7 @@ module.exports = async (req, res) => {
 
     // DELETE: Arıza silme
     if (method === 'DELETE') {
+      
       if (!id) {
         return res.status(400).json({ message: 'Arıza ID gereklidir.' });
       }

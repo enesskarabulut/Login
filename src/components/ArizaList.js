@@ -7,7 +7,6 @@ function ArizaList({ arizalar, onSelect, onDelete }) {
   const handleDelete = async (id) => {
     setLoadingId(id); // Loading başlat
     setError(null); // Önceki hatayı temizle
-
     try {
       await onDelete(id); // Silme işlemini çağır
     } catch (err) {
