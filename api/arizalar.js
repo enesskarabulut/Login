@@ -21,8 +21,9 @@ module.exports = async (req, res) => {
       });
     });
 
-    // GET: Tüm arızalar veya bir arızayı getir
     if (method === 'GET') {
+      const { id, status, page = 1, limit = 10 } = req.query;
+    
       if (id) {
         const ariza = await getArizaById(id);
         if (!ariza) {
@@ -30,10 +31,20 @@ module.exports = async (req, res) => {
         }
         return res.json(ariza);
       }
-      const { status } = req.query;
-      const arizalar = await getArizalar(status);
-      return res.json(arizalar);
+    
+      // Sayfalama için offset hesaplama
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+    
+      try {
+        const arizalar = await getArizalar(status, offset, parseInt(limit));
+        return res.status(200).json(arizalar);
+      } catch (error) {
+        console.error('Sunucu hatası:', error.message);
+        return res.status(500).json({ error: { code: 500, message: 'A server error has occurred' } });
+      }
     }
+    
+    
 
     // POST: Yeni arıza oluştur
     if (method === 'POST') {

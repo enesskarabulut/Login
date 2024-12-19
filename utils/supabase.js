@@ -6,21 +6,28 @@ const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Tüm arızaları getirme
-async function getArizalar(status) {
-  let query = supabase.from('arizalar').select('*');
+async function getArizalar(status, offset = 0, limit = 10) {
+  let query = supabase
+    .from('arizalar') // Tablonuzun adı
+    .select('*') // Tüm sütunları seç
+    .order('id', { ascending: false }) // En son kayıtları en üstte göster
+    .range(offset, offset + limit - 1); // Sayfalama için aralık belirle
 
   if (status) {
     const decodedStatus = decodeURIComponent(status).replace(/\+/g, ' ');
-    query = query.ilike('status', decodedStatus);
+    query = query.ilike('status', decodedStatus); // Status'e göre filtrele
   }
 
   const { data, error } = await query;
+
   if (error) {
     console.error('Supabase Hatası:', error.message);
     throw error;
   }
   return data;
 }
+
+
 
 // Tek bir arıza getirme
 async function getArizaById(id) {
