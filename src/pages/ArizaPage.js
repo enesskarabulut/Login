@@ -8,10 +8,12 @@ import ArizaDetailPage from './ArizaDetailPage';
 function ArizaPage() {
   const [arizalar, setArizalar] = useState([]);
   const [selectedArizaId, setSelectedArizaId] = useState(null);
+  const [loading, setLoading]  = useState(true)
 
   const loadArizalar = async (status) => {
     const { data } = await fetchArizalar(status ? { status } : {});
     setArizalar(data);
+    setLoading(false)
   };
 
   useEffect(() => {
@@ -34,14 +36,17 @@ function ArizaPage() {
     if (selectedArizaId === id) {
       setSelectedArizaId(null);
     }
+    setLoading(true)
     loadArizalar();
   };
 
   return (
     <div>
+      <h1>Arıza Kayıt Sistemi</h1>
       <ArizaForm onCreate={handleCreate} />
       <ArizaFilter onFilter={handleFilter} />
       <ArizaList
+      loading={loading}
         arizalar={arizalar}
         onSelect={setSelectedArizaId}
         onDelete={handleDelete}

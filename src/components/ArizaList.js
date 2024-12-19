@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function ArizaList({ arizalar, onSelect, onDelete }) {
+function ArizaList({ arizalar, onSelect, onDelete, loading }) {
   const [loadingId, setLoadingId] = useState(null); // Silme sırasında loading ID'sini tutar
   const [error, setError] = useState(null); // Hata mesajını tutar
 
@@ -43,7 +43,7 @@ function ArizaList({ arizalar, onSelect, onDelete }) {
           </tr>
         </thead>
         <tbody>
-          {arizalar.map((ariza) => (
+          {loading ? <p className='loadingMessage'>Yükleniyor..</p>: arizalar.map((ariza) => (
             <tr key={ariza.id}>
               <td onClick={() => onSelect(ariza.id)} style={{ cursor: 'pointer' }}>
                 {ariza.id}

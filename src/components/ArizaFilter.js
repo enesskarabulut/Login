@@ -14,13 +14,13 @@ function ArizaFilter({ onFilter }) {
         <label>Status Filtre:</label>
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">Tümü</option>
-          <option value="işleme alındı">işleme alındı</option>
-          <option value="tamamlandı">tamamlandı</option>
-          <option value="ertelendi">ertelendi</option>
-          <option value="ileri tarihli">ileri tarihli</option>
+          <option value="İşleme alındı">İşleme alındı</option>
+          <option value="Tamamlandı">Tamamlandı</option>
+          <option value="Ertelendi">Ertelendi</option>
+          <option value="ileri tarihli">İleri tarihli</option>
         </select>
       </div>
-      <button type="submit">Filtrele</button>
+      <button className='filter-button' type="submit">Filtrele</button>
     </form>
   );
 }
