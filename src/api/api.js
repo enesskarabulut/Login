@@ -46,43 +46,25 @@ export const updateAriza = (id, data) => api.put(`/arizalar?id=${id}`, data);
 export const deleteAriza = (id) => api.delete(`/arizalar?id=${id}`);
 
 // Dosya yükle
+// Dosya yükle
 export const uploadDokuman = async (id, file) => {
-  if (!file) throw new Error("Yüklenecek dosya seçilmedi.");
-
   const reader = new FileReader();
 
   return new Promise((resolve, reject) => {
     reader.onloadend = async () => {
       const fileData = reader.result.split(',')[1]; // Base64 format
-
       try {
-        const payload = {
+        const response = await api.patch(`/arizalar?id=${id}`, {
           file: { name: file.name, content: fileData },
-        };
-
-        // ID varsa, belirli bir arızaya yükle
-        const endpoint = id ? `/arizalar?id=${id}` : `/arizalar`;
-        const response = await api.patch(endpoint, payload);
-
-        if (response.data && response.data.dokumanURL) {
-          resolve(response.data.dokumanURL); // Başarıyla yüklenen URL
-        } else {
-          reject(new Error("Dosya yükleme başarısız veya URL alınamadı."));
-        }
+        });
+        resolve(response.data);
       } catch (error) {
-        console.error("Dosya yükleme hatası:", error);
         reject(error);
       }
     };
-
-    reader.onerror = () => {
-      reject(new Error("Dosya okuma hatası oluştu."));
-    };
-
     reader.readAsDataURL(file);
   });
-};
-
+}; 
 
 // LOGOUT
 export const logoutUser = () => {

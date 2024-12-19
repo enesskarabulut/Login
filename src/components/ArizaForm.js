@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function ArizaForm({ onCreate, onUpload }) {
+function ArizaForm({ onCreate }) {
   const [formData, setFormData] = useState({
     adres: '',
     usta: '',
@@ -9,8 +9,6 @@ function ArizaForm({ onCreate, onUpload }) {
     tarih: '',
     detay: '',
   });
-
-  const [file, setFile] = useState(null); // Dosya state'i
 
   // Input değişimini yönetir
   const handleChange = (e) => {
@@ -51,27 +49,6 @@ function ArizaForm({ onCreate, onUpload }) {
       tarih: '',
       detay: '',
     });
-  };
-
-  // Dosya seçimini yönetir
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
-  // Dosyayı yükleme işlemi
-  const handleUpload = async () => {
-    if (file) {
-      try {
-        await onUpload(file);
-        alert('Dosya başarıyla yüklendi!');
-        setFile(null); // Dosya state'ini sıfırla
-      } catch (error) {
-        console.error('Dosya yükleme hatası:', error.message);
-        alert('Dosya yüklenirken bir hata oluştu.');
-      }
-    } else {
-      alert('Lütfen bir dosya seçin.');
-    }
   };
 
   return (
@@ -136,20 +113,10 @@ function ArizaForm({ onCreate, onUpload }) {
             rows={3}
           ></textarea>
         </div>
-
-        {/* Döküman yükleme alanı */}
-        <div>
-          <label>Döküman Yükle:</label>
-          <input type="file" onChange={handleFileChange} />
-          <button type="button" onClick={handleUpload}>
-            Döküman Yükle
-          </button>
-        </div>
-
         <button type="submit">Kaydet</button>
       </form>
     </div>
   );
 }
 
-export default ArizaForm;
+export default ArizaForm; 

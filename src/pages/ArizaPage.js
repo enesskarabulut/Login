@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchArizalar, createAriza, deleteAriza, uploadDokuman } from '../api/api';
+import { fetchArizalar, createAriza, deleteAriza } from '../api/api';
 import ArizaList from '../components/ArizaList';
 import ArizaForm from '../components/ArizaForm';
 import ArizaFilter from '../components/ArizaFilter';
@@ -8,14 +8,12 @@ import ArizaDetailPage from './ArizaDetailPage';
 function ArizaPage() {
   const [arizalar, setArizalar] = useState([]);
   const [selectedArizaId, setSelectedArizaId] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]  = useState(true)
 
-  // Tüm arızaları yükler
   const loadArizalar = async (status) => {
-    setLoading(true);
     const { data } = await fetchArizalar(status ? { status } : {});
     setArizalar(data);
-    setLoading(false);
+    setLoading(false)
   };
 
   useEffect(() => {
@@ -26,6 +24,7 @@ function ArizaPage() {
     loadArizalar(status);
     setSelectedArizaId(null); // Filtreleme yapıldığında arıza detayını kapat
   };
+  
 
   const handleCreate = async (arizaData) => {
     await createAriza(arizaData);
@@ -37,30 +36,17 @@ function ArizaPage() {
     if (selectedArizaId === id) {
       setSelectedArizaId(null);
     }
+    setLoading(true)
     loadArizalar();
-  };
-
-  const handleUpload = async (file) => {
-    if (!file) return;
-
-    try {
-      // Yeni arıza oluşturulurken döküman yükle
-      const uploadedURL = await uploadDokuman(null, file); // ID'siz yükleme
-      console.log('Yüklenen dosya URL:', uploadedURL);
-      return uploadedURL;
-    } catch (error) {
-      console.error('Dosya yükleme hatası:', error.message);
-      throw error;
-    }
   };
 
   return (
     <div>
       <h1>Arıza Kayıt Sistemi</h1>
-      <ArizaForm onCreate={handleCreate} onUpload={handleUpload} />
+      <ArizaForm onCreate={handleCreate} />
       <ArizaFilter onFilter={handleFilter} />
       <ArizaList
-        loading={loading}
+      loading={loading}
         arizalar={arizalar}
         onSelect={setSelectedArizaId}
         onDelete={handleDelete}
@@ -76,4 +62,4 @@ function ArizaPage() {
   );
 }
 
-export default ArizaPage;
+export default ArizaPage; 
