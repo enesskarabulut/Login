@@ -8,13 +8,20 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // Tüm arızaları getirme
 async function getArizalar(status) {
   let query = supabase.from('arizalar').select('*');
+
   if (status) {
-    query = query.eq('status', status);
+    const decodedStatus = decodeURIComponent(status).replace(/\+/g, ' '); // '+' karakterini boşluğa dönüştür
+    query = query.ilike('status', decodedStatus); // Harf duyarsız sorgu
   }
+
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) {
+    console.error('Supabase Hatası:', error.message);
+    throw error;
+  }
   return data;
 }
+
 
 // Tek bir arıza getirme
 async function getArizaById(id) {
