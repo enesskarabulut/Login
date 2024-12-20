@@ -21,9 +21,10 @@ module.exports = async (req, res) => {
       });
     });
 
+    // GET: Arıza listeleme veya detay gösterme
     if (method === 'GET') {
-      const { id, status, page = 1, limit = 10 } = req.query;
-    
+      const { status, page = 1, limit = 10 } = req.query;
+
       if (id) {
         const ariza = await getArizaById(id);
         if (!ariza) {
@@ -31,26 +32,36 @@ module.exports = async (req, res) => {
         }
         return res.json(ariza);
       }
-    
-      // Sayfalama için offset hesaplama
+
       const offset = (parseInt(page) - 1) * parseInt(limit);
-    
-      try {
-        const arizalar = await getArizalar(status, offset, parseInt(limit));
-        return res.status(200).json(arizalar);
-      } catch (error) {
-        console.error('Sunucu hatası:', error.message);
-        return res.status(500).json({ error: { code: 500, message: 'A server error has occurred' } });
-      }
+      const arizalar = await getArizalar(status, offset, parseInt(limit));
+
+      // Müşteri bilgilerini dahil ederek yanıt döner
+      const arizaListesi = arizalar.map((ariza) => ({
+        id: ariza.id,
+        adres: ariza.adres,
+        usta: ariza.usta,
+        status: ariza.status,
+        ucret: ariza.ucret,
+        detay: ariza.detay,
+        tarih: ariza.tarih,
+        name: ariza.name,
+        surname: ariza.surname,
+        msisdn: ariza.msisdn,
+        dokuman: ariza.dokuman,
+      }));
+
+      return res.status(200).json(arizaListesi);
     }
-    
-    
 
     // POST: Yeni arıza oluştur
     if (method === 'POST') {
-      const { adres, usta, status, ucret, detay, tarih } = req.body;
-      if (!adres || !usta) {
-        return res.status(400).json({ message: 'Adres ve usta bilgisi zorunludur.' });
+      const { adres, usta, status, ucret, detay, tarih, name, surname, msisdn } = req.body;
+
+      if (!adres || !usta || !name || !surname || !msisdn) {
+        return res
+          .status(400)
+          .json({ message: 'Adres, usta, müşteri adı, soyadı ve telefon numarası zorunludur.' });
       }
 
       const yeniAriza = await createNewAriza({
@@ -60,7 +71,10 @@ module.exports = async (req, res) => {
         ucret,
         detay,
         tarih,
-        dokuman: null, // Yeni arıza için doküman başlangıçta boş
+        name,
+        surname,
+        msisdn,
+        dokuman: null,
       });
 
       return res.status(201).json(yeniAriza);
@@ -72,7 +86,7 @@ module.exports = async (req, res) => {
         return res.status(400).json({ message: 'Arıza ID gereklidir.' });
       }
 
-      const { adres, usta, status, ucret, detay, tarih } = req.body;
+      const { adres, usta, status, ucret, detay, tarih, name, surname, msisdn } = req.body;
       const updates = {
         adres,
         usta,
@@ -80,6 +94,9 @@ module.exports = async (req, res) => {
         ucret: ucret ? Number(ucret) : null,
         detay,
         tarih,
+        name,
+        surname,
+        msisdn,
       };
 
       const updatedAriza = await updateArizaRecord(id, updates);
@@ -90,7 +107,7 @@ module.exports = async (req, res) => {
       return res.status(200).json({ message: 'Arıza başarıyla güncellendi.', ariza: updatedAriza });
     }
 
-// PATCH: Supabase Storage'a dosya yükle ve dokümanları güncelle
+    // PATCH: Supabase Storage'a dosya yükle ve dokümanları güncelle
 if (method === 'PATCH') {
   const { file } = req.body;
 
@@ -142,8 +159,6 @@ if (method === 'PATCH') {
     return res.status(500).json({ message: 'Sunucu hatası', error: error.message });
   }
 }
-
-
     // DELETE: Arıza silme
     if (method === 'DELETE') {
       if (!id) {
@@ -158,7 +173,6 @@ if (method === 'PATCH') {
       return res.json({ message: 'Arıza başarıyla silindi.' });
     }
 
-    // Desteklenmeyen metod
     return res.status(405).json({ message: 'Method Not Allowed' });
   } catch (error) {
     console.error('Hata:', error.message);

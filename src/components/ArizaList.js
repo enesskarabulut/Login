@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 
-function ArizaList({ arizalar, onSelect, onDelete, selectedArizaId, loadArizalar, setCurrentPage }) {
+function ArizaList({
+  arizalar,
+  onSelect,
+  onDelete,
+  selectedArizaId,
+  loadArizalar,
+  setCurrentPage,
+}) {
   const [loadingId, setLoadingId] = useState(null); // Silme sırasında yüklenen ID
   const [error, setError] = useState(null); // Hata mesajını tutar
 
@@ -25,15 +32,29 @@ function ArizaList({ arizalar, onSelect, onDelete, selectedArizaId, loadArizalar
 
   return (
     <div className="table-container">
-      <div className='table-container-header'>
-      <h2>Arızalar</h2>
-      <button onClick={()=>{loadArizalar(); setCurrentPage(1)}}>Refresh</button>
+      {/* Header Bölümü */}
+      <div className="table-container-header">
+        <h2>Arızalar</h2>
+        <button
+          onClick={() => {
+            loadArizalar();
+            setCurrentPage(1);
+          }}
+        >
+          Refresh
+        </button>
       </div>
+
+      {/* Hata Mesajı */}
       {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      {/* Arızalar Tablosu */}
       <table>
         <thead>
           <tr>
             <th>ID</th>
+            <th>Müşteri Bilgisi</th>
+            <th>Telefon Numarası</th>
             <th>Adres</th>
             <th>Usta</th>
             <th>Status</th>
@@ -47,6 +68,7 @@ function ArizaList({ arizalar, onSelect, onDelete, selectedArizaId, loadArizalar
         <tbody>
           {arizalar.map((ariza) => (
             <tr key={ariza.id}>
+              {/* ID */}
               <td
                 onClick={() => onSelect(ariza.id === selectedArizaId ? null : ariza.id)}
                 style={{
@@ -58,12 +80,36 @@ function ArizaList({ arizalar, onSelect, onDelete, selectedArizaId, loadArizalar
               >
                 {ariza.id}
               </td>
+
+              {/* Müşteri Bilgisi */}
+              <td>
+                {ariza.name && ariza.surname
+                  ? `${ariza.name} ${ariza.surname}`
+                  : '-'}
+              </td>
+
+              {/* Telefon Numarası */}
+              <td>{ariza.msisdn || '-'}</td>
+
+              {/* Adres */}
               <td>{ariza.adres}</td>
+
+              {/* Usta */}
               <td>{ariza.usta}</td>
+
+              {/* Status */}
               <td>{ariza.status}</td>
+
+              {/* Ücret */}
               <td>{ariza.ucret || '-'}</td>
+
+              {/* Tarih */}
               <td>{formatDateToString(ariza.tarih)}</td>
+
+              {/* Detay */}
               <td>{ariza.detay || '-'}</td>
+
+              {/* Dökümanlar */}
               <td>
                 {ariza.dokuman ? (
                   ariza.dokuman.split(',').map((link, index) => (
@@ -82,6 +128,8 @@ function ArizaList({ arizalar, onSelect, onDelete, selectedArizaId, loadArizalar
                   '-'
                 )}
               </td>
+
+              {/* Silme Butonu */}
               <td>
                 <button
                   onClick={() => handleDelete(ariza.id)}

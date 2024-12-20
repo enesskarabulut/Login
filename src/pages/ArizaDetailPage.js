@@ -3,6 +3,9 @@ import { fetchArizaById, updateAriza } from '../api/api';
 
 function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
   const [ariza, setAriza] = useState(null);
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [msisdn, setMsisdn] = useState('');
   const [adres, setAdres] = useState('');
   const [usta, setUsta] = useState('');
   const [status, setStatus] = useState('');
@@ -17,9 +20,12 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
     try {
       const { data } = await fetchArizaById(id);
       setAriza(data);
-      setAdres(data.adres);
-      setUsta(data.usta);
-      setStatus(data.status);
+      setName(data.name || '');
+      setSurname(data.surname || '');
+      setMsisdn(data.msisdn || '');
+      setAdres(data.adres || '');
+      setUsta(data.usta || '');
+      setStatus(data.status || '');
       setUcret(data.ucret || '');
       setTarih(data.tarih || '');
       setDetay(data.detay || '');
@@ -27,7 +33,6 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
       const dokumanField = data.dokuman || '';
       setDokumanlar(dokumanField ? dokumanField.split(',') : []);
 
-      // Detay yüklendiğini parent component'e bildir
       if (onDetailLoaded) onDetailLoaded();
     } catch (error) {
       console.error('Arıza verisi yüklenirken hata oluştu:', error.message);
@@ -41,6 +46,9 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
   // Arıza güncelleme işlemi
   const handleUpdate = async () => {
     const arizaData = {
+      name,
+      surname,
+      msisdn,
       adres,
       usta,
       status,
@@ -54,56 +62,96 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
     loadArizalar();
   };
 
+  // Dosya yükleme işlemi
   const handleUpload = () => {
     if (!file) return;
-  
+
     const reader = new FileReader();
     reader.onloadend = async () => {
-      const base64Data = reader.result.split(',')[1]; // Base64 verisini al
-      const token = localStorage.getItem('token'); // Token'ı localStorage'den al
-  
+      const base64Data = reader.result.split(',')[1];
+      const token = localStorage.getItem('token');
+
       try {
         const response = await fetch(`/api/arizalar?id=${id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`, // Token'ı ekle
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ file: { name: file.name, content: base64Data } }),
         });
-  
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Yükleme başarısız');
         }
-  
+
         const responseData = await response.json();
         console.log('Yüklenen dosya URL:', responseData.dokumanURL);
         alert('Dosya başarıyla yüklendi!');
-        loadAriza(); // Arıza verisini tekrar yükle
+        loadAriza();
       } catch (error) {
         console.error('Dosya yükleme hatası:', error.message);
         alert('Dosya yüklenirken bir hata oluştu.');
       }
     };
-  
-    reader.readAsDataURL(file); // Dosyayı Base64'e çevir
+
+    reader.readAsDataURL(file);
   };
-  
 
   if (!ariza) return <div>Yükleniyor...</div>;
 
   return (
     <div className="detail-container">
       <h2>Arıza Detayı #{ariza.id}</h2>
+
+      {/* Müşteri Adı */}
+      <div>
+        <label>Müşteri Adı:</label>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Müşteri Adı"
+          required
+        />
+      </div>
+
+      {/* Müşteri Soyadı */}
+      <div>
+        <label>Müşteri Soyadı:</label>
+        <input
+          value={surname}
+          onChange={(e) => setSurname(e.target.value)}
+          placeholder="Müşteri Soyadı"
+          required
+        />
+      </div>
+
+      {/* Telefon Numarası */}
+      <div>
+        <label>Telefon Numarası:</label>
+        <input
+          value={msisdn}
+          onChange={(e) => setMsisdn(e.target.value)}
+          placeholder="05XXXXXXXXX"
+          pattern="05[0-9]{9}"
+          required
+        />
+      </div>
+
+      {/* Adres */}
       <div>
         <label>Adres:</label>
         <input value={adres} onChange={(e) => setAdres(e.target.value)} />
       </div>
+
+      {/* Usta */}
       <div>
         <label>Usta:</label>
         <input value={usta} onChange={(e) => setUsta(e.target.value)} />
       </div>
+
+      {/* Status */}
       <div>
         <label>Status:</label>
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -113,6 +161,8 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
           <option value="ileri tarihli">ileri tarihli</option>
         </select>
       </div>
+
+      {/* Ücret */}
       <div>
         <label>Ücret:</label>
         <input
@@ -121,6 +171,8 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
           onChange={(e) => setUcret(e.target.value)}
         />
       </div>
+
+      {/* Tarih */}
       {status === 'ileri tarihli' && (
         <div>
           <label>Tarih:</label>
@@ -131,6 +183,8 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
           />
         </div>
       )}
+
+      {/* Detay */}
       <div>
         <label>Detay:</label>
         <textarea
@@ -139,13 +193,16 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
           rows="3"
         />
       </div>
+
       <button onClick={handleUpdate}>Güncelle</button>
 
+      {/* Doküman Yükleme */}
       <hr />
       <h3>Doküman Yükle</h3>
       <input type="file" onChange={(e) => setFile(e.target.files[0])} />
       <button onClick={handleUpload}>Yükle</button>
 
+      {/* Yüklenen Dokümanlar */}
       <h3>Yüklenen Dokümanlar</h3>
       {dokumanlar.length > 0 ? (
         <ul>
