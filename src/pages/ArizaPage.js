@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { fetchArizalar, createAriza, deleteAriza } from '../api/api';
 import ArizaList from '../components/ArizaList';
 import ArizaForm from '../components/ArizaForm';
@@ -9,31 +9,27 @@ function ArizaPage() {
   const [arizalar, setArizalar] = useState([]);
   const [selectedArizaId, setSelectedArizaId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedView, setSelectedView] = useState('Anasayfa'); // Ekran seçimi için state
-  const [currentPage, setCurrentPage] = useState(1); // Sayfa numarası
-  const [currentStatus, setCurrentStatus] = useState(''); // Filtrelenmiş status
-  const limit = 10; // Her sayfada gösterilecek kayıt sayısı
+  const [selectedView, setSelectedView] = useState('Anasayfa');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [currentStatus, setCurrentStatus] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const detailRef = useRef(null); // Detay bölgesi için referans
+  const limit = 10;
 
-  // Arızaları yükle
   const loadArizalar = async (status = currentStatus, page = 1) => {
     setLoading(true);
     try {
-      const { data } = await fetchArizalar({
-        status,
-        page,
-        limit,
-      });
-
+      const { data } = await fetchArizalar({ status, page, limit });
       if (page === 1) {
-        setArizalar(data); // İlk sayfa için listeyi sıfırla
+        setArizalar(data);
       } else {
-        setArizalar((prevArizalar) => [...prevArizalar, ...data]); // Diğer sayfaları mevcut listeye ekle
+        setArizalar((prevArizalar) => [...prevArizalar, ...data]);
       }
-
-      setCurrentStatus(status); // Mevcut filtreyi kaydet
-      setLoading(false);
+      setCurrentStatus(status);
     } catch (error) {
-      console.error("Arızalar yüklenirken hata oluştu:", error.message);
+      console.error('Arızalar yüklenirken hata oluştu:', error.message);
+    } finally {
       setLoading(false);
     }
   };
@@ -42,82 +38,89 @@ function ArizaPage() {
     if (selectedView === 'arizalar') loadArizalar();
   }, [selectedView]);
 
-  // Filtreleme işlemi
   const handleFilter = (status) => {
-    setCurrentPage(1); // Sayfayı başa döndür
+    setCurrentPage(1);
     loadArizalar(status);
     setSelectedArizaId(null);
   };
 
-  // Yeni arıza oluştur
   const handleCreate = async (arizaData) => {
-    await createAriza(arizaData);
-    loadArizalar();
+    setIsCreating(true);
+    setSuccessMessage('');
+    try {
+      const newAriza = await createAriza(arizaData);
+      const arizaId = newAriza?.id || newAriza?.data?.id;
+
+      if (arizaId) {
+        loadArizalar();
+        setSuccessMessage(`"${arizaId}" ID'li arıza oluşturuldu.`);
+        setTimeout(() => setSuccessMessage(''), 2000);
+      }
+    } catch (error) {
+      console.error('Arıza oluşturulurken hata oluştu:', error.message);
+      setSuccessMessage('Arıza oluşturulurken hata oluştu.');
+      setTimeout(() => setSuccessMessage(''), 2000);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
-  // Arıza silme işlemi
   const handleDelete = async (id) => {
+    setArizalar([]);
     await deleteAriza(id);
     if (selectedArizaId === id) setSelectedArizaId(null);
     loadArizalar(currentStatus, 1);
   };
 
-  // Ekranı değiştirme fonksiyonu
   const handleViewChange = (view) => {
     setSelectedView(view);
-    setSelectedArizaId(null); // Detay sayfasını kapat
-    setCurrentPage(1); // Sayfayı başa döndür
-    setArizalar([]); // Önceki listeyi temizle
+    setSelectedArizaId(null);
+    setCurrentPage(1);
+    setArizalar([]);
   };
 
-  // "Diğer Arızalar" butonu tıklandığında
   const handleLoadMore = () => {
     const nextPage = currentPage + 1;
     setCurrentPage(nextPage);
     loadArizalar(currentStatus, nextPage);
   };
 
+  // Arıza detayı tamamen yüklendiğinde çağrılır
+  const handleDetailLoaded = () => {
+    if (detailRef.current) {
+      detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div>
-      <h1>Arıza Kayıt Sistemi</h1>
-
-      {/* Anasayfa Seçim Butonları */}
-      <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-        <button
-          onClick={() => handleViewChange('Anasayfa')}
-          style={{
-            marginRight: '10px',
-            backgroundColor: selectedView === 'Anasayfa' ? '#007bff' : '#ccc',
-            color: 'white',
-            padding: '10px',
-          }}
-        >
-          Anasayfa
-        </button>
-        <button
-          onClick={() => handleViewChange('yeniAriza')}
-          style={{
-            marginRight: '10px',
-            backgroundColor: selectedView === 'yeniAriza' ? '#007bff' : '#ccc',
-            color: 'white',
-            padding: '10px',
-          }}
-        >
-          Yeni Arıza Oluştur
-        </button>
-        <button
-          onClick={() => handleViewChange('arizalar')}
-          style={{
-            backgroundColor: selectedView === 'arizalar' ? '#007bff' : '#ccc',
-            color: 'white',
-            padding: '10px',
-          }}
-        >
-          Arızalar
-        </button>
+      {/* Başlık ve Butonlar */}
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <h1>Arıza Kayıt Sistemi</h1>
+        <div className="view-buttons" style={{ marginTop: '10px' }}>
+          <button onClick={() => handleViewChange('Anasayfa')} className={selectedView === 'Anasayfa' ? 'active' : ''}>
+            Anasayfa
+          </button>
+          <button onClick={() => handleViewChange('yeniAriza')} className={selectedView === 'yeniAriza' ? 'active' : ''}>
+            Yeni Arıza Oluştur
+          </button>
+          <button onClick={() => handleViewChange('arizalar')} className={selectedView === 'arizalar' ? 'active' : ''}>
+            Arızalar
+          </button>
+        </div>
       </div>
 
-      {/* Seçilen Ekrana Göre Bileşenleri Göster */}
+      {/* Overlay Ekran Karartma */}
+      {isCreating && (
+        <div className="overlay">
+          <span>Arıza oluşturuluyor...</span>
+        </div>
+      )}
+
+      {/* Başarı Mesajı */}
+      {successMessage && <div className="success-message">{successMessage}</div>}
+
+      {/* Seçilen Ekrana Göre İçerikler */}
       {selectedView === 'Anasayfa' && (
         <div>
           <h2>Anasayfa</h2>
@@ -133,36 +136,28 @@ function ArizaPage() {
           <ArizaList
             loading={loading}
             arizalar={arizalar}
-            onSelect={setSelectedArizaId}
+            onSelect={(id) => setSelectedArizaId(id)}
             onDelete={handleDelete}
+            selectedArizaId={selectedArizaId}
           />
 
           {/* Diğer Arızalar Butonu */}
           {arizalar.length >= limit * currentPage && (
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>
-              <button
-                onClick={handleLoadMore}
-                style={{
-                  backgroundColor: '#28a745',
-                  color: 'white',
-                  padding: '10px 20px',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                }}
-              >
-                Diğer Arızalar
-              </button>
+            <div className="load-more-container">
+              <button onClick={handleLoadMore}>Diğer Arızalar</button>
             </div>
           )}
 
           {/* Arıza Detay Sayfası */}
           {selectedArizaId && (
-            <ArizaDetailPage
-              id={selectedArizaId}
-              loadArizalar={() => loadArizalar(currentStatus, 1)}
-              onClose={() => setSelectedArizaId(null)}
-            />
+            <div ref={detailRef}>
+              <ArizaDetailPage
+                id={selectedArizaId}
+                loadArizalar={() => loadArizalar(currentStatus, 1)}
+                onDetailLoaded={handleDetailLoaded}
+                onClose={() => setSelectedArizaId(null)}
+              />
+            </div>
           )}
         </>
       )}

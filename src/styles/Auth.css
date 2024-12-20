@@ -17,6 +17,17 @@ h1 {
     text-align: center;
 }
 
+h2 {
+    font-size: 20px;
+    color: #333;
+}
+
+label {
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
 button {
     background: #0066cc;
     color: #fff;
@@ -47,10 +58,26 @@ textarea {
 }
 
 /* Container Stilleri */
-.app-container {
-    max-width: 1200px;
-    margin: 0 auto;
+.auth-container {
+    max-width: 400px;
+    margin: 50px auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-container {
+    margin-bottom: 20px;
+}
+
+.header-title {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 26px;
+    color: #0066cc;
+    font-weight: 700;
 }
 
 .card {
@@ -67,32 +94,102 @@ textarea {
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     padding: 15px;
-    overflow-x: auto; /* Yatay taşmaları engelle */
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-}
-
-table th, table td {
-    padding: 10px;
-    border: 1px solid #ddd;
-    text-align: left;
-    word-wrap: break-word; /* Uzun metinlerin taşmasını önler */
+    margin-top: 10px;
 }
 
 table th {
     background-color: #f0f0f0;
     color: #333;
+    font-weight: bold;
+    text-align: left;
+    padding: 10px;
+    border-bottom: 2px solid #ccc;
+}
+
+table td {
+    padding: 10px;
+    border: 1px solid #ddd;
 }
 
 table tr:nth-child(even) {
     background-color: #f9f9f9;
 }
 
-/* Logout Button */
+/* Filtreleme Alanı */
+.filter-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.filter-container select {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Arıza ID Stil (Tıklanabilir Mavi ID) */
+.ariza-id {
+    color: #007bff; /* Mavi renk */
+    cursor: pointer; /* İmleç pointer */
+    text-decoration: underline; /* Altı çizili görünüm */
+    transition: color 0.3s ease; /* Geçiş efekti */
+}
+
+.ariza-id:hover {
+    color: #0056b3; /* Hover durumunda koyu mavi */
+}
+
+/* Özel Login Butonu */
+.login-button {
+    display: block;
+    width: 100%;
+    max-width: 200px;
+    margin: 10px auto;
+    padding: 10px 15px;
+    font-size: 16px;
+    text-align: center;
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.login-button:hover {
+    background-color: #005bb5;
+}
+
+/* App Container */
+.app-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+}
+
+/* Detay Container */
+.detail-container {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    margin-top: 20px;
+}
+
 .logout-button {
     position: absolute;
     top: 10px;
@@ -100,14 +197,18 @@ table tr:nth-child(even) {
     padding: 8px 15px;
     background-color: #e74c3c;
     color: white;
+    border: none;
     border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease;
 }
 
 .logout-button:hover {
     background-color: #c0392b;
 }
 
-/* Anasayfa Menü */
+/* Anasayfa Container */
 .Anasayfa-container {
     text-align: center;
     margin: 20px;
@@ -117,12 +218,13 @@ table tr:nth-child(even) {
     display: flex;
     justify-content: center;
     gap: 20px;
-    flex-wrap: wrap; /* Mobil uyumlu hale getir */
+    margin-bottom: 20px;
 }
 
 .Anasayfa-menu button {
     padding: 10px 20px;
     font-size: 16px;
+    cursor: pointer;
 }
 
 .Anasayfa-content {
@@ -131,58 +233,115 @@ table tr:nth-child(even) {
     border-radius: 8px;
 }
 
-/* Filter Container */
-.filter-container {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    flex-wrap: wrap; /* Mobilde esneklik sağlar */
-}
-
-.filter-container label {
-    font-weight: bold;
-}
-
-/* Media Queries for Responsive Design */
-@media screen and (max-width: 768px) {
-    .app-container {
-        padding: 10px;
-    }
-
-    h1 {
-        font-size: 20px;
-    }
-
-    button {
-        width: 100%; /* Butonlar tam genişlik olur */
-        margin-bottom: 10px;
-    }
-
+/* Responsive Tasarım */
+@media (max-width: 768px) {
     .filter-container {
-        flex-direction: column; /* Filtreler dikey sıralanır */
+        flex-direction: column;
+        gap: 5px;
     }
 
     table th, table td {
         font-size: 12px;
         padding: 8px;
     }
-}
 
-@media screen and (max-width: 480px) {
-    h1 {
-        font-size: 18px;
-    }
-
-    .card, .table-container, .filter-container {
+    .table-container {
         padding: 10px;
     }
 
-    .Anasayfa-menu {
-        flex-direction: column;
+    button {
+        width: 100%;
+        margin-top: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 20px;
+    }
+
+    h2 {
+        font-size: 18px;
+    }
+
+    input, select, textarea {
+        padding: 6px;
+        font-size: 12px;
     }
 
     button {
         font-size: 12px;
-        padding: 8px 10px;
+        padding: 8px;
     }
 }
+
+.success-message {
+    position: fixed;
+    bottom: 20px; /* Sayfanın altında */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #d4edda; /* Açık yeşil renk */
+    color: #155724; /* Yazı rengi */
+    border: 1px solid #c3e6cb;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* Diğer elementlerin üzerinde */
+    opacity: 0.9;
+  }
+  
+  /* Butonlar */
+.view-buttons button {
+    margin-right: 10px;
+    padding: 8px 15px;
+    border: none;
+    cursor: pointer;
+    background-color: #ccc;
+    color: white;
+    transition: background 0.3s;
+    border-radius: 5px;
+  }
+  
+  .view-buttons button.active {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  /* Diğer Arızalar Butonu */
+.load-more-container {
+    display: flex;
+    justify-content: center; /* Yatayda ortalama */
+    margin-top: 20px; /* Yukarıdan boşluk */
+  }
+  
+  .load-more-container button {
+    padding: 10px 20px; /* Buton iç boşluğu */
+    background-color: #28a745; /* Yeşil arka plan */
+    color: white; /* Beyaz yazı rengi */
+    border: none;
+    border-radius: 5px; /* Köşeleri yuvarlak yap */
+    font-size: 16px; /* Yazı boyutu */
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .load-more-container button:hover {
+    background-color: #218838; /* Hover durumu için koyu yeşil */
+  }
+  
+  /* Arıza ID hücresi için stil */
+.table-container td.clickable-id {
+    cursor: pointer;
+    color: #007bff; /* Mavi renk */
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  
+  .table-container td.clickable-id:hover {
+    color: #0056b3; /* Daha koyu mavi hover efekti */
+    font-weight: bold;
+  }
+  

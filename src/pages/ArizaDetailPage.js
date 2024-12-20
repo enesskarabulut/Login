@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchArizaById, updateAriza, uploadDokuman } from '../api/api';
 
-function ArizaDetailPage({ id, loadArizalar, onClose }) {
+function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
   const [ariza, setAriza] = useState(null);
   const [adres, setAdres] = useState('');
   const [usta, setUsta] = useState('');
@@ -14,18 +14,25 @@ function ArizaDetailPage({ id, loadArizalar, onClose }) {
 
   // Arıza verisini yükle
   const loadAriza = async () => {
-    const { data } = await fetchArizaById(id);
-    setAriza(data);
-    setAdres(data.adres);
-    setUsta(data.usta);
-    setStatus(data.status);
-    setUcret(data.ucret || '');
-    setTarih(data.tarih || '');
-    setDetay(data.detay || '');
+    try {
+      const { data } = await fetchArizaById(id);
+      setAriza(data);
+      setAdres(data.adres);
+      setUsta(data.usta);
+      setStatus(data.status);
+      setUcret(data.ucret || '');
+      setTarih(data.tarih || '');
+      setDetay(data.detay || '');
 
-    // Dokümanları kontrol edip liste formatına çevir
-    const dokumanField = data.dokuman || '';
-    setDokumanlar(dokumanField ? dokumanField.split(',') : []);
+      // Dokümanları kontrol edip liste formatına çevir
+      const dokumanField = data.dokuman || '';
+      setDokumanlar(dokumanField ? dokumanField.split(',') : []);
+
+      // Detay yüklenince parent bileşene bildir
+      if (onDetailLoaded) onDetailLoaded();
+    } catch (error) {
+      console.error('Arıza verisi yüklenirken hata oluştu:', error.message);
+    }
   };
 
   useEffect(() => {

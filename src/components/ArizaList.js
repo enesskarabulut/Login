@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
-function ArizaList({ arizalar, onSelect, onDelete }) {
-  const [loadingId, setLoadingId] = useState(null); // Silme sırasında loading ID'sini tutar
+function ArizaList({ arizalar, onSelect, onDelete, selectedArizaId }) {
+  const [loadingId, setLoadingId] = useState(null); // Silme sırasında yüklenen ID
   const [error, setError] = useState(null); // Hata mesajını tutar
 
   // Tarih formatlama fonksiyonu: Yıl-Ay-Gün => Gün.Ay.Yıl
@@ -12,15 +12,14 @@ function ArizaList({ arizalar, onSelect, onDelete }) {
   };
 
   const handleDelete = async (id) => {
-    setLoadingId(id); // Loading başlat
-    setError(null); // Önceki hatayı temizle
-
+    setLoadingId(id);
+    setError(null);
     try {
-      await onDelete(id); // Silme işlemini çağır
+      await onDelete(id);
     } catch (err) {
       setError(`Arıza silinirken hata oluştu: ${err.message || 'Bilinmeyen hata'}`);
     } finally {
-      setLoadingId(null); // Loading durumunu temizle
+      setLoadingId(null);
     }
   };
 
@@ -45,23 +44,29 @@ function ArizaList({ arizalar, onSelect, onDelete }) {
         <tbody>
           {arizalar.map((ariza) => (
             <tr key={ariza.id}>
-              <td onClick={() => onSelect(ariza.id)} style={{ cursor: 'pointer' }}>
+              <td
+                onClick={() => onSelect(ariza.id === selectedArizaId ? null : ariza.id)}
+                style={{
+                  cursor: 'pointer',
+                  color: '#007BFF',
+                  textDecoration: 'underline',
+                  fontWeight: ariza.id === selectedArizaId ? 'bold' : 'normal',
+                }}
+              >
                 {ariza.id}
               </td>
               <td>{ariza.adres}</td>
               <td>{ariza.usta}</td>
               <td>{ariza.status}</td>
               <td>{ariza.ucret || '-'}</td>
-              {/* Tarih formatlama */}
               <td>{formatDateToString(ariza.tarih)}</td>
               <td>{ariza.detay || '-'}</td>
-              {/* Dökümanlar alanı */}
               <td>
                 {ariza.dokuman ? (
                   ariza.dokuman.split(',').map((link, index) => (
                     <div key={index}>
                       <a
-                        href={link.trim()} // Linkteki ekstra boşlukları temizle
+                        href={link.trim()}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ color: '#007BFF', textDecoration: 'underline' }}
