@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchArizaById, updateAriza, uploadDokuman } from '../api/api';
+import { fetchArizaById, updateAriza } from '../api/api';
 
 function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
   const [ariza, setAriza] = useState(null);
@@ -10,7 +10,7 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
   const [tarih, setTarih] = useState('');
   const [detay, setDetay] = useState('');
   const [file, setFile] = useState(null);
-  const [dokumanlar, setDokumanlar] = useState([]); // Dokümanların listesi
+  const [dokumanlar, setDokumanlar] = useState([]);
 
   // Arıza verisini yükle
   const loadAriza = async () => {
@@ -24,11 +24,10 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
       setTarih(data.tarih || '');
       setDetay(data.detay || '');
 
-      // Dokümanları kontrol edip liste formatına çevir
       const dokumanField = data.dokuman || '';
       setDokumanlar(dokumanField ? dokumanField.split(',') : []);
 
-      // Detay yüklenince parent bileşene bildir
+      // Detay yüklendiğini parent component'e bildir
       if (onDetailLoaded) onDetailLoaded();
     } catch (error) {
       console.error('Arıza verisi yüklenirken hata oluştu:', error.message);
@@ -55,20 +54,42 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
     loadArizalar();
   };
 
-  // Dosya yükleme işlemi
-  const handleUpload = async () => {
-    if (file) {
+  const handleUpload = () => {
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Data = reader.result.split(',')[1]; // Base64 verisini al
+      const token = localStorage.getItem('token'); // Token'ı localStorage'den al
+  
       try {
-        const fileURL = await uploadDokuman(id, file);
-        console.log('Yüklenen dosya URL:', fileURL);
+        const response = await fetch(`/api/arizalar?id=${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`, // Token'ı ekle
+          },
+          body: JSON.stringify({ file: { name: file.name, content: base64Data } }),
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Yükleme başarısız');
+        }
+  
+        const responseData = await response.json();
+        console.log('Yüklenen dosya URL:', responseData.dokumanURL);
         alert('Dosya başarıyla yüklendi!');
-        loadAriza(); // Yeniden yükle
+        loadAriza(); // Arıza verisini tekrar yükle
       } catch (error) {
         console.error('Dosya yükleme hatası:', error.message);
         alert('Dosya yüklenirken bir hata oluştu.');
       }
-    }
+    };
+  
+    reader.readAsDataURL(file); // Dosyayı Base64'e çevir
   };
+  
 
   if (!ariza) return <div>Yükleniyor...</div>;
 
@@ -131,7 +152,7 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
           {dokumanlar.map((doc, index) => (
             <li key={index}>
               <a
-                href={doc.trim()} // Boşluk temizleniyor
+                href={doc.trim()}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: '#007BFF', textDecoration: 'underline' }}

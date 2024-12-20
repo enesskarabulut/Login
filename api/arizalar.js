@@ -90,55 +90,59 @@ module.exports = async (req, res) => {
       return res.status(200).json({ message: 'Arıza başarıyla güncellendi.', ariza: updatedAriza });
     }
 
-    // PATCH: Supabase Storage'a dosya yükle ve dokümanları güncelle
-    if (method === 'PATCH') {
-      const { file } = req.body;
+// PATCH: Supabase Storage'a dosya yükle ve dokümanları güncelle
+if (method === 'PATCH') {
+  const { file } = req.body;
 
-      if (!id || !file) {
-        return res.status(400).json({ message: 'Arıza ID ve dosya gereklidir.' });
-      }
+  if (!id || !file) {
+    return res.status(400).json({ message: 'Arıza ID ve dosya gereklidir.' });
+  }
 
-      try {
-        // Dosya yolu oluştur
-        const filePath = `uploads/${id}/${Date.now()}_${file.name}`;
+  try {
+    // Dosya yolu oluştur
+    const filePath = `uploads/${id}/${Date.now()}_${file.name}`;
 
-        // Dosyayı Supabase Storage'a yükle
-        const { error: uploadError } = await supabase.storage
-          .from('ariza-dokumanlar')
-          .upload(filePath, Buffer.from(file.content, 'base64'));
+    // Dosyayı Supabase Storage'a yükle
+    const { error: uploadError } = await supabase.storage
+      .from('ariza-dokumanlar')
+      .upload(filePath, Buffer.from(file.content, 'base64'), {
+        contentType: 'application/pdf', // İçerik türünü belirtin
+        upsert: true // Aynı isimde dosya varsa üzerine yazılmasını isterseniz
+      });
 
-        if (uploadError) {
-          console.error('Dosya yükleme hatası:', uploadError.message);
-          return res.status(500).json({ message: 'Dosya yükleme başarısız.', error: uploadError.message });
-        }
-
-        // Public URL oluştur
-        const publicURL = `${process.env.SUPABASE_URL}/storage/v1/object/public/ariza-dokumanlar/${filePath}`;
-        console.log('Public URL:', publicURL);
-
-        // Mevcut dokümanları al, yeni URL'yi ekle
-        const ariza = await getArizaById(id);
-        let dokumanlar = ariza.dokuman ? ariza.dokuman.split(',') : []; // Mevcut dokümanları diziye çevir
-        dokumanlar.push(publicURL); // Yeni URL'yi ekle
-        const updatedDokuman = dokumanlar.join(','); // Diziyi stringe dönüştür
-
-        // Arıza kaydını güncelle
-        const updateResponse = await updateArizaRecord(id, { dokuman: updatedDokuman });
-
-        if (!updateResponse) {
-          return res.status(500).json({ message: 'Döküman kaydedilemedi.' });
-        }
-
-        return res.status(200).json({
-          message: 'Dosya başarıyla yüklendi.',
-          dokumanURL: publicURL,
-          ariza: updateResponse,
-        });
-      } catch (error) {
-        console.error('Sunucu hatası:', error.message);
-        return res.status(500).json({ message: 'Sunucu hatası', error: error.message });
-      }
+    if (uploadError) {
+      console.error('Dosya yükleme hatası:', uploadError.message);
+      return res.status(500).json({ message: 'Dosya yükleme başarısız.', error: uploadError.message });
     }
+
+    // Public URL oluştur
+    const publicURL = `${process.env.SUPABASE_URL}/storage/v1/object/public/ariza-dokumanlar/${filePath}`;
+    console.log('Public URL:', publicURL);
+
+    // Mevcut dokümanları güncelle
+    const ariza = await getArizaById(id);
+    let dokumanlar = ariza.dokuman ? ariza.dokuman.split(',') : [];
+    dokumanlar.push(publicURL);
+    const updatedDokuman = dokumanlar.join(',');
+
+    // Arıza kaydını güncelle
+    const updateResponse = await updateArizaRecord(id, { dokuman: updatedDokuman });
+
+    if (!updateResponse) {
+      return res.status(500).json({ message: 'Döküman kaydedilemedi.' });
+    }
+
+    return res.status(200).json({
+      message: 'Dosya başarıyla yüklendi.',
+      dokumanURL: publicURL,
+      ariza: updateResponse,
+    });
+  } catch (error) {
+    console.error('Sunucu hatası:', error.message);
+    return res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+  }
+}
+
 
     // DELETE: Arıza silme
     if (method === 'DELETE') {
