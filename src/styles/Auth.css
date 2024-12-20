@@ -98,6 +98,12 @@ textarea {
     padding: 15px;
 }
 
+.table-container-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -293,7 +299,9 @@ table tr:nth-child(even) {
   }
   
   /* Butonlar */
+
 .view-buttons button {
+    margin-top: 12px ;
     margin-right: 10px;
     padding: 8px 15px;
     border: none;

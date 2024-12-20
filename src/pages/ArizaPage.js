@@ -52,7 +52,6 @@ function ArizaPage() {
       const arizaId = newAriza?.id || newAriza?.data?.id;
 
       if (arizaId) {
-        loadArizalar();
         setSuccessMessage(`"${arizaId}" ID'li arıza oluşturuldu.`);
         setTimeout(() => setSuccessMessage(''), 2000);
       }
@@ -91,7 +90,6 @@ function ArizaPage() {
       detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
-
   return (
     <div>
       {/* Başlık ve Butonlar */}
@@ -134,6 +132,8 @@ function ArizaPage() {
         <>
           <ArizaFilter onFilter={handleFilter} />
           <ArizaList
+            setCurrentPage={setCurrentPage}
+            loadArizalar={loadArizalar}
             loading={loading}
             arizalar={arizalar}
             onSelect={(id) => setSelectedArizaId(id)}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function ArizaList({ arizalar, onSelect, onDelete, selectedArizaId }) {
+function ArizaList({ arizalar, onSelect, onDelete, selectedArizaId, loadArizalar, setCurrentPage }) {
   const [loadingId, setLoadingId] = useState(null); // Silme sırasında yüklenen ID
   const [error, setError] = useState(null); // Hata mesajını tutar
 
@@ -25,7 +25,10 @@ function ArizaList({ arizalar, onSelect, onDelete, selectedArizaId }) {
 
   return (
     <div className="table-container">
+      <div className='table-container-header'>
       <h2>Arızalar</h2>
+      <button onClick={()=>{loadArizalar(); setCurrentPage(1)}}>Refresh</button>
+      </div>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <table>
         <thead>

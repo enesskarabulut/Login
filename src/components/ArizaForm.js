@@ -28,7 +28,6 @@ function ArizaForm({ onCreate }) {
   // Form submit edildiğinde çağrılır
   const handleSubmit = (e) => {
     e.preventDefault();
-
     const arizaData = {
       ...formData,
       ucret: formData.ucret ? Number(formData.ucret) : null,
