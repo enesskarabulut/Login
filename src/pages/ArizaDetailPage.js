@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { fetchArizaById, updateAriza } from '../api/api';
+import antalyaData from '../data/antalya.json';
 
 function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
   const [ariza, setAriza] = useState(null);
+
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [msisdn, setMsisdn] = useState('');
-  const [adres, setAdres] = useState('');
+  const [il, setIl] = useState('ANTALYA');
+  const [ilce, setIlce] = useState('');
+  const [mahalle, setMahalle] = useState('');
+  const [binaNo, setBinaNo] = useState('');
+  const [daireNo, setDaireNo] = useState('');
   const [usta, setUsta] = useState('');
   const [status, setStatus] = useState('');
   const [ucret, setUcret] = useState('');
@@ -14,6 +20,10 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
   const [detay, setDetay] = useState('');
   const [file, setFile] = useState(null);
   const [dokumanlar, setDokumanlar] = useState([]);
+
+  // İlçeleri ve Mahalleleri oluşturmak için verileri çek
+  const ilceler = Object.keys(antalyaData["ANTALYA"]);
+  const mahalleler = ilce ? antalyaData["ANTALYA"][ilce] : [];
 
   // Arıza verisini yükle
   const loadAriza = async () => {
@@ -23,7 +33,11 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
       setName(data.name || '');
       setSurname(data.surname || '');
       setMsisdn(data.msisdn || '');
-      setAdres(data.adres || '');
+      setIl(data.il || 'ANTALYA');
+      setIlce(data.ilce || '');
+      setMahalle(data.mahalle || '');
+      setBinaNo(data.binaNo || '');
+      setDaireNo(data.daireNo || '');
       setUsta(data.usta || '');
       setStatus(data.status || '');
       setUcret(data.ucret || '');
@@ -43,13 +57,33 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
     loadAriza();
   }, [id]);
 
+  // İlçe değiştiğinde mahalle, binaNo, daireNo sıfırlama mantığı
+  const handleIlceChange = (e) => {
+    const selectedIlce = e.target.value;
+    setIlce(selectedIlce);
+    setMahalle('');
+    setBinaNo('');
+    setDaireNo('');
+  };
+
+  const handleMahalleChange = (e) => {
+    const selectedMahalle = e.target.value;
+    setMahalle(selectedMahalle);
+    setBinaNo('');
+    setDaireNo('');
+  };
+
   // Arıza güncelleme işlemi
   const handleUpdate = async () => {
     const arizaData = {
       name,
       surname,
       msisdn,
-      adres,
+      il,
+      ilce,
+      mahalle,
+      binaNo,
+      daireNo,
       usta,
       status,
       ucret: ucret ? Number(ucret) : null,
@@ -139,11 +173,66 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
         />
       </div>
 
-      {/* Adres */}
+      {/* İl */}
       <div>
-        <label>Adres:</label>
-        <input value={adres} onChange={(e) => setAdres(e.target.value)} />
+        <label>İl:</label>
+        <input value={il} readOnly />
       </div>
+
+      {/* İlçe */}
+      <div>
+        <label>İlçe:</label>
+        <select value={ilce} onChange={handleIlceChange} required>
+          <option value="">-- İlçe Seçin --</option>
+          {ilceler.map((ic) => (
+            <option key={ic} value={ic}>{ic}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Mahalle */}
+      {ilce && (
+        <div>
+          <label>Mahalle:</label>
+          <select
+            name="mahalle"
+            value={mahalle}
+            onChange={handleMahalleChange}
+            required
+          >
+            <option value="">-- Mahalle Seçin --</option>
+            {mahalleler.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Bina No */}
+      {mahalle && (
+        <div>
+          <label>Bina No:</label>
+          <input
+            value={binaNo}
+            onChange={(e) => setBinaNo(e.target.value)}
+            placeholder="Bina No"
+            required
+          />
+        </div>
+      )}
+
+      {/* Daire No */}
+      {mahalle && (
+        <div>
+          <label>Daire No:</label>
+          <input
+            value={daireNo}
+            onChange={(e) => setDaireNo(e.target.value)}
+            placeholder="Daire No"
+            required
+          />
+        </div>
+      )}
 
       {/* Usta */}
       <div>
@@ -172,7 +261,7 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
         />
       </div>
 
-      {/* Tarih */}
+      {/* Tarih (status ileri tarihli ise) */}
       {status === 'ileri tarihli' && (
         <div>
           <label>Tarih:</label>

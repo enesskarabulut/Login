@@ -55,7 +55,11 @@ function ArizaList({
             <th>ID</th>
             <th>Müşteri Bilgisi</th>
             <th>Telefon Numarası</th>
-            <th>Adres</th>
+            <th>İl</th>
+            <th>İlçe</th>
+            <th>Mahalle</th>
+            <th>Bina No</th>
+            <th>Daire No</th>
             <th>Usta</th>
             <th>Status</th>
             <th>Ücret</th>
@@ -91,8 +95,20 @@ function ArizaList({
               {/* Telefon Numarası */}
               <td>{ariza.msisdn || '-'}</td>
 
-              {/* Adres */}
-              <td>{ariza.adres}</td>
+              {/* İl */}
+              <td>{ariza.il || '-'}</td>
+
+              {/* İlçe */}
+              <td>{ariza.ilce || '-'}</td>
+
+              {/* Mahalle */}
+              <td>{ariza.mahalle || '-'}</td>
+
+              {/* Bina No */}
+              <td>{ariza.binaNo || '-'}</td>
+
+              {/* Daire No */}
+              <td>{ariza.daireNo || '-'}</td>
 
               {/* Usta */}
               <td>{ariza.usta}</td>

@@ -11,37 +11,48 @@ function ArizaPage() {
   const [loading, setLoading] = useState(true);
   const [selectedView, setSelectedView] = useState('Anasayfa');
   const [currentPage, setCurrentPage] = useState(1);
-  const [currentStatus, setCurrentStatus] = useState('');
+  const [filters, setFilters] = useState({});
   const [isCreating, setIsCreating] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const detailRef = useRef(null); // Detay bölgesi için referans
+  const [filtering, setFiltering] = useState(false); // Filtreleme sırasında overlay göstermek için
+  const detailRef = useRef(null);
   const limit = 10;
 
-  const loadArizalar = async (status = currentStatus, page = 1) => {
+  const loadArizalar = async (givenFilters = filters, page = 1) => {
     setLoading(true);
     try {
-      const { data } = await fetchArizalar({ status, page, limit });
+      const { data } = await fetchArizalar({ ...givenFilters, page, limit });
       if (page === 1) {
         setArizalar(data);
       } else {
         setArizalar((prevArizalar) => [...prevArizalar, ...data]);
       }
-      setCurrentStatus(status);
     } catch (error) {
       console.error('Arızalar yüklenirken hata oluştu:', error.message);
     } finally {
       setLoading(false);
+      setFiltering(false); // Filtreleme tamamlandığında overlay kapat
     }
   };
 
   useEffect(() => {
-    if (selectedView === 'arizalar') loadArizalar();
+    if (selectedView === 'arizalar') {
+      loadArizalar(filters, currentPage);
+    }
   }, [selectedView]);
 
-  const handleFilter = (status) => {
+  const handleFilter = (newFilters) => {
+    setFilters(newFilters);
     setCurrentPage(1);
-    loadArizalar(status);
-    setSelectedArizaId(null);
+    setFiltering(true); // Filtre uygulandığında overlay aç
+    if (selectedView === 'arizalar') {
+      loadArizalar(newFilters, 1);
+      setSelectedArizaId(null);
+    } else {
+      // Eğer filtre "arizalar" görünümünde değilken yapılırsa,
+      // bir sonraki arizalar görünümüne geçildiğinde filtre uygulanacaktır.
+      setFiltering(false);
+    }
   };
 
   const handleCreate = async (arizaData) => {
@@ -68,7 +79,8 @@ function ArizaPage() {
     setArizalar([]);
     await deleteAriza(id);
     if (selectedArizaId === id) setSelectedArizaId(null);
-    loadArizalar(currentStatus, 1);
+    setCurrentPage(1);
+    loadArizalar(filters, 1);
   };
 
   const handleViewChange = (view) => {
@@ -76,22 +88,47 @@ function ArizaPage() {
     setSelectedArizaId(null);
     setCurrentPage(1);
     setArizalar([]);
+    if (view === 'arizalar') {
+      loadArizalar(filters, 1);
+    }
   };
 
   const handleLoadMore = () => {
     const nextPage = currentPage + 1;
     setCurrentPage(nextPage);
-    loadArizalar(currentStatus, nextPage);
+    loadArizalar(filters, nextPage);
   };
 
-  // Arıza detayı tamamen yüklendiğinde çağrılır
   const handleDetailLoaded = () => {
     if (detailRef.current) {
       detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
+
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
+      {/* Overlay (Filtreleme sırasında) */}
+      {filtering && (
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            padding: '20px 40px',
+            borderRadius: '8px',
+            boxShadow: '0 0 10px rgba(0,0,0,0.5)'
+          }}>
+            <h3>Filtre uygulanıyor, lütfen bekleyiniz...</h3>
+          </div>
+        </div>
+      )}
+
       {/* Başlık ve Butonlar */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h1>Arıza Kayıt Sistemi</h1>
@@ -108,7 +145,7 @@ function ArizaPage() {
         </div>
       </div>
 
-      {/* Overlay Ekran Karartma */}
+      {/* Overlay Ekran Karartma (Arıza Oluşturma) */}
       {isCreating && (
         <div className="overlay">
           <span>Arıza oluşturuluyor...</span>
@@ -118,7 +155,7 @@ function ArizaPage() {
       {/* Başarı Mesajı */}
       {successMessage && <div className="success-message">{successMessage}</div>}
 
-      {/* Seçilen Ekrana Göre İçerikler */}
+      {/* Görünüm */}
       {selectedView === 'Anasayfa' && (
         <div>
           <h2>Anasayfa</h2>
@@ -141,19 +178,17 @@ function ArizaPage() {
             selectedArizaId={selectedArizaId}
           />
 
-          {/* Diğer Arızalar Butonu */}
           {arizalar.length >= limit * currentPage && (
             <div className="load-more-container">
               <button onClick={handleLoadMore}>Diğer Arızalar</button>
             </div>
           )}
 
-          {/* Arıza Detay Sayfası */}
           {selectedArizaId && (
             <div ref={detailRef}>
               <ArizaDetailPage
                 id={selectedArizaId}
-                loadArizalar={() => loadArizalar(currentStatus, 1)}
+                loadArizalar={() => loadArizalar(filters, 1)}
                 onDetailLoaded={handleDetailLoaded}
                 onClose={() => setSelectedArizaId(null)}
               />

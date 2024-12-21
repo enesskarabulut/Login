@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
+import antalyaData from '../data/antalya.json'; // JSON dosyanızın konumuna göre düzenleyin
 
 function ArizaForm({ onCreate }) {
   const [formData, setFormData] = useState({
-    name: '', // Müşteri Adı
-    surname: '', // Müşteri Soyadı
-    msisdn: '', // Telefon Numarası
-    adres: '',
+    name: '',
+    surname: '',
+    msisdn: '',
+    il: 'ANTALYA', 
+    ilce: '',
+    mahalle: '',
+    binaNo: '',
+    daireNo: '',
     usta: '',
     status: 'işleme alındı',
     ucret: '',
@@ -13,17 +18,23 @@ function ArizaForm({ onCreate }) {
     detay: '',
   });
 
-  const [errors, setErrors] = useState({}); // Hata mesajlarını tutar
+  const [errors, setErrors] = useState({});
 
-  // Input değişimini yönetir
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'ilce') {
+      // ilçe değişince mahalle, binaNo, daireNo sıfırlanır
+      setFormData((prev) => ({ ...prev, ilce: value, mahalle: '', binaNo: '', daireNo: '' }));
+    } else if (name === 'mahalle') {
+      setFormData((prev) => ({ ...prev, mahalle: value, binaNo: '', daireNo: '' }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
 
     // Telefon numarası doğrulama
     if (name === 'msisdn') {
-      const phoneRegex = /^05\d{9}$/; // 05 ile başlayan toplam 11 karakterli numara
+      const phoneRegex = /^05\d{9}$/;
       if (!phoneRegex.test(value)) {
         setErrors((prev) => ({
           ...prev,
@@ -31,13 +42,12 @@ function ArizaForm({ onCreate }) {
         }));
       } else {
         const updatedErrors = { ...errors };
-        delete updatedErrors.msisdn; // Hata yoksa kaldır
+        delete updatedErrors.msisdn;
         setErrors(updatedErrors);
       }
     }
   };
 
-  // Tarihi gün.ay.yıl formatına çevirir
   const formatTarih = (tarih) => {
     const date = new Date(tarih);
     const gun = String(date.getDate()).padStart(2, '0');
@@ -46,11 +56,9 @@ function ArizaForm({ onCreate }) {
     return `${gun}.${ay}.${yil}`;
   };
 
-  // Form submit edildiğinde çağrılır
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Telefon numarası formatı kontrolü
     const phoneRegex = /^05\d{9}$/;
     if (!phoneRegex.test(formData.msisdn)) {
       setErrors({ msisdn: 'Telefon numarası 05XXXXXXXXX formatında olmalıdır.' });
@@ -73,7 +81,11 @@ function ArizaForm({ onCreate }) {
       name: '',
       surname: '',
       msisdn: '',
-      adres: '',
+      il: 'ANTALYA',
+      ilce: '',
+      mahalle: '',
+      binaNo: '',
+      daireNo: '',
       usta: '',
       status: 'işleme alındı',
       ucret: '',
@@ -82,6 +94,14 @@ function ArizaForm({ onCreate }) {
     });
     setErrors({});
   };
+
+  // antalyaData içinden ilçeleri çek
+  const ilceler = Object.keys(antalyaData["ANTALYA"]);
+
+  // Seçilen ilçenin mahallelerini çek
+  const mahalleler = formData.ilce
+    ? antalyaData["ANTALYA"][formData.ilce]
+    : [];
 
   return (
     <div className="card form-container">
@@ -123,16 +143,73 @@ function ArizaForm({ onCreate }) {
           {errors.msisdn && <p style={{ color: 'red' }}>{errors.msisdn}</p>}
         </div>
 
-        {/* Adres */}
+        {/* İl */}
         <div>
-          <label>Adres:</label>
+          <label>İl:</label>
           <input
-            name="adres"
-            value={formData.adres}
-            onChange={handleChange}
-            required
+            name="il"
+            value={formData.il}
+            readOnly
           />
         </div>
+
+        {/* İlçe */}
+        <div>
+          <label>İlçe:</label>
+          <select
+            name="ilce"
+            value={formData.ilce}
+            onChange={handleChange}
+            required
+          >
+            <option value="">-- İlçe Seçin --</option>
+            {ilceler.map((ilce) => (
+              <option key={ilce} value={ilce}>{ilce}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Mahalle */}
+        {formData.ilce && (
+          <div>
+            <label>Mahalle:</label>
+            <select
+              name="mahalle"
+              value={formData.mahalle}
+              onChange={handleChange}
+              required
+            >
+              <option value="">-- Mahalle Seçin --</option>
+              {mahalleler.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Bina No ve Daire No, mahalle seçildiyse göster */}
+        {formData.mahalle && (
+          <>
+            <div>
+              <label>Bina No:</label>
+              <input
+                name="binaNo"
+                value={formData.binaNo}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div>
+              <label>Daire/Kapı No:</label>
+              <input
+                name="daireNo"
+                value={formData.daireNo}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </>
+        )}
 
         {/* Usta */}
         <div>
@@ -168,7 +245,7 @@ function ArizaForm({ onCreate }) {
           />
         </div>
 
-        {/* Tarih */}
+        {/* Tarih (status ileri tarihli ise) */}
         {formData.status === 'ileri tarihli' && (
           <div>
             <label>Tarih:</label>

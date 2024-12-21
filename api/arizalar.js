@@ -1,7 +1,6 @@
 const authMiddleware = require('../middleware/authMiddleware');
 const { supabase } = require('../utils/supabase');
 const {
-  getArizalar,
   getArizaById,
   createNewAriza,
   updateArizaRecord,
@@ -13,7 +12,6 @@ module.exports = async (req, res) => {
   const { id } = req.query;
 
   try {
-    // Middleware ile token doğrulaması
     await new Promise((resolve, reject) => {
       authMiddleware(req, res, (err) => {
         if (err) reject(err);
@@ -21,9 +19,26 @@ module.exports = async (req, res) => {
       });
     });
 
-    // GET: Arıza listeleme veya detay gösterme
     if (method === 'GET') {
-      const { status, page = 1, limit = 10 } = req.query;
+      const {
+        name,
+        surname,
+        msisdn,
+        il,
+        ilce,
+        mahalle,
+        binaNo,
+        daireNo,
+        usta,
+        status,
+        ucret,
+        tarih,
+        page = 1,
+        limit = 10
+      } = req.query;
+
+      console.log('---- Filtre Parametreleri ----');
+      console.log('status (raw):', status);
 
       if (id) {
         const ariza = await getArizaById(id);
@@ -33,13 +48,46 @@ module.exports = async (req, res) => {
         return res.json(ariza);
       }
 
-      const offset = (parseInt(page) - 1) * parseInt(limit);
-      const arizalar = await getArizalar(status, offset, parseInt(limit));
+      const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+      let query = supabase.from('arizalar').select('*', { count: 'exact' });
 
-      // Müşteri bilgilerini dahil ederek yanıt döner
+      if (name) query = query.ilike('name', `%${name}%`);
+      if (surname) query = query.ilike('surname', `%${surname}%`);
+      if (msisdn) query = query.ilike('msisdn', `%${msisdn}%`);
+      if (il) query = query.ilike('il', `%${il}%`);
+      if (ilce) query = query.ilike('ilce', `%${ilce}%`);
+      if (mahalle) query = query.ilike('mahalle', `%${mahalle}%`);
+      if (binaNo) query = query.ilike('binaNo', `%${binaNo}%`);
+      if (daireNo) query = query.ilike('daireNo', `%${daireNo}%`);
+      if (usta) query = query.ilike('usta', `%${usta}%`);
+
+      // + -> ' ' değişimi ve trim
+      if (status && status.trim() !== '') {
+        let replaced = status.replace(/\+/g, ' ');
+        replaced = replaced.trim();
+
+        console.log('Status (after replace & trim):', replaced);
+        query = query.eq('status', replaced);
+      }
+
+      if (ucret) query = query.eq('ucret', ucret);
+      if (tarih) query = query.eq('tarih', tarih);
+
+      query = query.range(offset, offset + parseInt(limit, 10) - 1);
+
+      const { data: arizalar, error } = await query;
+      if (error) {
+        console.error('Hata:', error);
+        return res.status(500).json({ message: 'Veri çekilirken hata oluştu', error: error.message });
+      }
+
       const arizaListesi = arizalar.map((ariza) => ({
         id: ariza.id,
-        adres: ariza.adres,
+        il: ariza.il,
+        ilce: ariza.ilce,
+        mahalle: ariza.mahalle,
+        binaNo: ariza.binaNo,
+        daireNo: ariza.daireNo,
         usta: ariza.usta,
         status: ariza.status,
         ucret: ariza.ucret,
@@ -56,16 +104,25 @@ module.exports = async (req, res) => {
 
     // POST: Yeni arıza oluştur
     if (method === 'POST') {
-      const { adres, usta, status, ucret, detay, tarih, name, surname, msisdn } = req.body;
+      const {
+        il, ilce, mahalle, binaNo, daireNo,
+        usta, status, ucret, detay, tarih,
+        name, surname, msisdn
+      } = req.body;
 
-      if (!adres || !usta || !name || !surname || !msisdn) {
-        return res
-          .status(400)
-          .json({ message: 'Adres, usta, müşteri adı, soyadı ve telefon numarası zorunludur.' });
+      // Zorunlu alanlar
+      if (!il || !ilce || !mahalle || !binaNo || !daireNo || !usta || !name || !surname || !msisdn) {
+        return res.status(400).json({
+          message: 'İl, ilçe, mahalle, bina no, daire no, usta, müşteri adı, soyadı ve telefon numarası zorunludur.'
+        });
       }
 
       const yeniAriza = await createNewAriza({
-        adres,
+        il,
+        ilce,
+        mahalle,
+        binaNo,
+        daireNo,
         usta,
         status: status || 'işleme alındı',
         ucret,
@@ -86,11 +143,26 @@ module.exports = async (req, res) => {
         return res.status(400).json({ message: 'Arıza ID gereklidir.' });
       }
 
-      const { adres, usta, status, ucret, detay, tarih, name, surname, msisdn } = req.body;
+      const {
+        il, ilce, mahalle, binaNo, daireNo,
+        usta, status, ucret, detay, tarih,
+        name, surname, msisdn
+      } = req.body;
+
+      if (!il || !ilce || !mahalle || !binaNo || !daireNo || !usta || !name || !surname || !msisdn) {
+        return res.status(400).json({
+          message: 'İl, ilçe, mahalle, bina no, daire no, usta, müşteri adı, soyadı ve telefon numarası zorunludur.'
+        });
+      }
+
       const updates = {
-        adres,
+        il,
+        ilce,
+        mahalle,
+        binaNo,
+        daireNo,
         usta,
-        status,
+        status: status ? status.trim() : 'işleme alındı',
         ucret: ucret ? Number(ucret) : null,
         detay,
         tarih,
@@ -108,57 +180,58 @@ module.exports = async (req, res) => {
     }
 
     // PATCH: Supabase Storage'a dosya yükle ve dokümanları güncelle
-if (method === 'PATCH') {
-  const { file } = req.body;
+    if (method === 'PATCH') {
+      const { file } = req.body;
 
-  if (!id || !file) {
-    return res.status(400).json({ message: 'Arıza ID ve dosya gereklidir.' });
-  }
+      if (!id || !file) {
+        return res.status(400).json({ message: 'Arıza ID ve dosya gereklidir.' });
+      }
 
-  try {
-    // Dosya yolu oluştur
-    const filePath = `uploads/${id}/${Date.now()}_${file.name}`;
+      try {
+        // Dosya yolu oluştur
+        const filePath = `uploads/${id}/${Date.now()}_${file.name}`;
 
-    // Dosyayı Supabase Storage'a yükle
-    const { error: uploadError } = await supabase.storage
-      .from('ariza-dokumanlar')
-      .upload(filePath, Buffer.from(file.content, 'base64'), {
-        contentType: 'application/pdf', // İçerik türünü belirtin
-        upsert: true // Aynı isimde dosya varsa üzerine yazılmasını isterseniz
-      });
+        // Dosyayı Supabase Storage'a yükle
+        const { error: uploadError } = await supabase.storage
+          .from('ariza-dokumanlar')
+          .upload(filePath, Buffer.from(file.content, 'base64'), {
+            contentType: 'application/pdf',
+            upsert: true
+          });
 
-    if (uploadError) {
-      console.error('Dosya yükleme hatası:', uploadError.message);
-      return res.status(500).json({ message: 'Dosya yükleme başarısız.', error: uploadError.message });
+        if (uploadError) {
+          console.error('Dosya yükleme hatası:', uploadError.message);
+          return res.status(500).json({ message: 'Dosya yükleme başarısız.', error: uploadError.message });
+        }
+
+        // Public URL oluştur
+        const publicURL = `${process.env.SUPABASE_URL}/storage/v1/object/public/ariza-dokumanlar/${filePath}`;
+        console.log('Public URL:', publicURL);
+
+        // Mevcut dokümanları güncelle
+        const ariza = await getArizaById(id);
+        let dokumanlar = ariza.dokuman ? ariza.dokuman.split(',') : [];
+        dokumanlar.push(publicURL);
+        const updatedDokuman = dokumanlar.join(',');
+
+        // Arıza kaydını güncelle
+        const updateResponse = await updateArizaRecord(id, { dokuman: updatedDokuman });
+
+        if (!updateResponse) {
+          return res.status(500).json({ message: 'Döküman kaydedilemedi.' });
+        }
+
+        return res.status(200).json({
+          message: 'Dosya başarıyla yüklendi.',
+          dokumanURL: publicURL,
+          ariza: updateResponse,
+        });
+      } catch (error) {
+        console.error('Sunucu hatası:', error.message);
+        return res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+      }
     }
 
-    // Public URL oluştur
-    const publicURL = `${process.env.SUPABASE_URL}/storage/v1/object/public/ariza-dokumanlar/${filePath}`;
-    console.log('Public URL:', publicURL);
-
-    // Mevcut dokümanları güncelle
-    const ariza = await getArizaById(id);
-    let dokumanlar = ariza.dokuman ? ariza.dokuman.split(',') : [];
-    dokumanlar.push(publicURL);
-    const updatedDokuman = dokumanlar.join(',');
-
-    // Arıza kaydını güncelle
-    const updateResponse = await updateArizaRecord(id, { dokuman: updatedDokuman });
-
-    if (!updateResponse) {
-      return res.status(500).json({ message: 'Döküman kaydedilemedi.' });
-    }
-
-    return res.status(200).json({
-      message: 'Dosya başarıyla yüklendi.',
-      dokumanURL: publicURL,
-      ariza: updateResponse,
-    });
-  } catch (error) {
-    console.error('Sunucu hatası:', error.message);
-    return res.status(500).json({ message: 'Sunucu hatası', error: error.message });
-  }
-}
     // DELETE: Arıza silme
     if (method === 'DELETE') {
       if (!id) {
