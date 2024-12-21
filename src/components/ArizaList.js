@@ -8,14 +8,26 @@ function ArizaList({
   loadArizalar,
   setCurrentPage,
 }) {
-  const [loadingId, setLoadingId] = useState(null); // Silme sırasında yüklenen ID
-  const [error, setError] = useState(null); // Hata mesajını tutar
+  const [loadingId, setLoadingId] = useState(null);
+  const [error, setError] = useState(null);
 
   // Tarih formatlama fonksiyonu: Yıl-Ay-Gün => Gün.Ay.Yıl
   const formatDateToString = (date) => {
     if (!date) return '-';
     const [year, month, day] = date.split('-');
     return `${day}.${month}.${year}`;
+  };
+
+  const formatAddress = (ariza) => {
+    const {
+      mahalle = 'Mh.',
+      sokak = 'SK',
+      binaNo = 'B',
+      daireNo = 'D',
+      il = '-',
+      ilce = '-',
+    } = ariza;
+    return `${mahalle} Mh., ${sokak} Sk., Bina No: ${binaNo}, Daire No: ${daireNo}, ${il}, ${ilce}`;
   };
 
   const handleDelete = async (id) => {
@@ -31,35 +43,30 @@ function ArizaList({
   };
 
   return (
-    <div className="table-container">
-      {/* Header Bölümü */}
-      <div className="table-container-header">
+    <div style={styles.tableContainerOuter}>
+      {/* Tablonun üstündeki başlık veya butonlar */}
+      <div style={styles.tableHeader}>
         <h2>Arızalar</h2>
         <button
           onClick={() => {
             loadArizalar();
             setCurrentPage(1);
           }}
+          style={styles.refreshButton}
         >
           Refresh
         </button>
       </div>
 
-      {/* Hata Mesajı */}
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      {/* Arızalar Tablosu */}
-      <table>
+      <table style={styles.table}>
         <thead>
           <tr>
             <th>ID</th>
             <th>Müşteri Bilgisi</th>
             <th>Telefon Numarası</th>
-            <th>İl</th>
-            <th>İlçe</th>
-            <th>Mahalle</th>
-            <th>Bina No</th>
-            <th>Daire No</th>
+            <th>Adres</th>
             <th>Usta</th>
             <th>Status</th>
             <th>Ücret</th>
@@ -72,7 +79,6 @@ function ArizaList({
         <tbody>
           {arizalar.map((ariza) => (
             <tr key={ariza.id}>
-              {/* ID */}
               <td
                 onClick={() => onSelect(ariza.id === selectedArizaId ? null : ariza.id)}
                 style={{
@@ -84,48 +90,18 @@ function ArizaList({
               >
                 {ariza.id}
               </td>
-
-              {/* Müşteri Bilgisi */}
               <td>
                 {ariza.name && ariza.surname
                   ? `${ariza.name} ${ariza.surname}`
                   : '-'}
               </td>
-
-              {/* Telefon Numarası */}
               <td>{ariza.msisdn || '-'}</td>
-
-              {/* İl */}
-              <td>{ariza.il || '-'}</td>
-
-              {/* İlçe */}
-              <td>{ariza.ilce || '-'}</td>
-
-              {/* Mahalle */}
-              <td>{ariza.mahalle || '-'}</td>
-
-              {/* Bina No */}
-              <td>{ariza.binaNo || '-'}</td>
-
-              {/* Daire No */}
-              <td>{ariza.daireNo || '-'}</td>
-
-              {/* Usta */}
-              <td>{ariza.usta}</td>
-
-              {/* Status */}
-              <td>{ariza.status}</td>
-
-              {/* Ücret */}
+              <td>{formatAddress(ariza)}</td>
+              <td>{ariza.usta || '-'}</td>
+              <td>{ariza.status || '-'}</td>
               <td>{ariza.ucret || '-'}</td>
-
-              {/* Tarih */}
               <td>{formatDateToString(ariza.tarih)}</td>
-
-              {/* Detay */}
               <td>{ariza.detay || '-'}</td>
-
-              {/* Dökümanlar */}
               <td>
                 {ariza.dokuman ? (
                   ariza.dokuman.split(',').map((link, index) => (
@@ -144,8 +120,6 @@ function ArizaList({
                   '-'
                 )}
               </td>
-
-              {/* Silme Butonu */}
               <td>
                 <button
                   onClick={() => handleDelete(ariza.id)}
@@ -156,6 +130,7 @@ function ArizaList({
                     border: 'none',
                     padding: '5px 10px',
                     cursor: loadingId === ariza.id ? 'not-allowed' : 'pointer',
+                    borderRadius: '4px',
                   }}
                 >
                   {loadingId === ariza.id ? 'Siliniyor...' : 'Sil'}
@@ -168,5 +143,37 @@ function ArizaList({
     </div>
   );
 }
+
+const styles = {
+  tableContainerOuter: {
+    margin: '0 auto',
+    marginBottom: '1em',
+    maxWidth: '1200px',
+    backgroundColor: '#fff',
+    borderRadius: '6px',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+    padding: '0.5em',
+  },
+  tableHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '0.5em',
+    padding: '0 0.5em',
+  },
+  refreshButton: {
+    backgroundColor: '#007BFF',
+    color: '#fff',
+    border: 'none',
+    padding: '8px 15px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontSize: '14px',
+  },
+};
 
 export default ArizaList;

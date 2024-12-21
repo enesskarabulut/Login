@@ -27,26 +27,16 @@ module.exports = async (req, res) => {
         il,
         ilce,
         mahalle,
+        sokak,
         binaNo,
         daireNo,
         usta,
         status,
-        ucret,
+        ucretAraligi, // Yeni: Fiyat aralığı filtresi
         tarih,
         page = 1,
-        limit = 10
+        limit = 10,
       } = req.query;
-
-      console.log('---- Filtre Parametreleri ----');
-      console.log('status (raw):', status);
-
-      if (id) {
-        const ariza = await getArizaById(id);
-        if (!ariza) {
-          return res.status(404).json({ message: 'Arıza bulunamadı.' });
-        }
-        return res.json(ariza);
-      }
 
       const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
       let query = supabase.from('arizalar').select('*', { count: 'exact' });
@@ -57,6 +47,7 @@ module.exports = async (req, res) => {
       if (il) query = query.ilike('il', `%${il}%`);
       if (ilce) query = query.ilike('ilce', `%${ilce}%`);
       if (mahalle) query = query.ilike('mahalle', `%${mahalle}%`);
+      if (sokak) query = query.ilike('sokak', `%${sokak}%`);
       if (binaNo) query = query.ilike('binaNo', `%${binaNo}%`);
       if (daireNo) query = query.ilike('daireNo', `%${daireNo}%`);
       if (usta) query = query.ilike('usta', `%${usta}%`);
@@ -65,12 +56,29 @@ module.exports = async (req, res) => {
       if (status && status.trim() !== '') {
         let replaced = status.replace(/\+/g, ' ');
         replaced = replaced.trim();
-
-        console.log('Status (after replace & trim):', replaced);
         query = query.eq('status', replaced);
       }
 
-      if (ucret) query = query.eq('ucret', ucret);
+      // Fiyat aralığı filtresi
+      if (ucretAraligi) {
+        switch (ucretAraligi) {
+          case '1-50':
+            query = query.gte('ucret', 1).lte('ucret', 50);
+            break;
+          case '50-250':
+            query = query.gte('ucret', 50).lte('ucret', 250);
+            break;
+          case '250-500':
+            query = query.gte('ucret', 250).lte('ucret', 500);
+            break;
+          case '500+':
+            query = query.gte('ucret', 500);
+            break;
+          default:
+            break;
+        }
+      }
+
       if (tarih) query = query.eq('tarih', tarih);
 
       query = query.range(offset, offset + parseInt(limit, 10) - 1);
@@ -86,6 +94,7 @@ module.exports = async (req, res) => {
         il: ariza.il,
         ilce: ariza.ilce,
         mahalle: ariza.mahalle,
+        sokak: ariza.sokak,
         binaNo: ariza.binaNo,
         daireNo: ariza.daireNo,
         usta: ariza.usta,
@@ -105,15 +114,26 @@ module.exports = async (req, res) => {
     // POST: Yeni arıza oluştur
     if (method === 'POST') {
       const {
-        il, ilce, mahalle, binaNo, daireNo,
-        usta, status, ucret, detay, tarih,
-        name, surname, msisdn
+        il,
+        ilce,
+        mahalle,
+        sokak, // Sokak parametresi eklendi
+        binaNo,
+        daireNo,
+        usta,
+        status,
+        ucret,
+        detay,
+        tarih,
+        name,
+        surname,
+        msisdn,
       } = req.body;
 
       // Zorunlu alanlar
-      if (!il || !ilce || !mahalle || !binaNo || !daireNo || !usta || !name || !surname || !msisdn) {
+      if (!il || !ilce || !mahalle || !sokak || !binaNo || !daireNo || !usta || !name || !surname || !msisdn) {
         return res.status(400).json({
-          message: 'İl, ilçe, mahalle, bina no, daire no, usta, müşteri adı, soyadı ve telefon numarası zorunludur.'
+          message: 'İl, ilçe, mahalle, sokak, bina no, daire no, usta, müşteri adı, soyadı ve telefon numarası zorunludur.',
         });
       }
 
@@ -121,6 +141,7 @@ module.exports = async (req, res) => {
         il,
         ilce,
         mahalle,
+        sokak, // Sokak bilgisi burada kullanılıyor
         binaNo,
         daireNo,
         usta,
@@ -144,14 +165,25 @@ module.exports = async (req, res) => {
       }
 
       const {
-        il, ilce, mahalle, binaNo, daireNo,
-        usta, status, ucret, detay, tarih,
-        name, surname, msisdn
+        il,
+        ilce,
+        mahalle,
+        sokak, // Sokak parametresi eklendi
+        binaNo,
+        daireNo,
+        usta,
+        status,
+        ucret,
+        detay,
+        tarih,
+        name,
+        surname,
+        msisdn,
       } = req.body;
 
-      if (!il || !ilce || !mahalle || !binaNo || !daireNo || !usta || !name || !surname || !msisdn) {
+      if (!il || !ilce || !mahalle || !sokak || !binaNo || !daireNo || !usta || !name || !surname || !msisdn) {
         return res.status(400).json({
-          message: 'İl, ilçe, mahalle, bina no, daire no, usta, müşteri adı, soyadı ve telefon numarası zorunludur.'
+          message: 'İl, ilçe, mahalle, sokak, bina no, daire no, usta, müşteri adı, soyadı ve telefon numarası zorunludur.',
         });
       }
 
@@ -159,6 +191,7 @@ module.exports = async (req, res) => {
         il,
         ilce,
         mahalle,
+        sokak, // Güncelleme sırasında sokak bilgisi ekleniyor
         binaNo,
         daireNo,
         usta,
@@ -178,6 +211,7 @@ module.exports = async (req, res) => {
 
       return res.status(200).json({ message: 'Arıza başarıyla güncellendi.', ariza: updatedAriza });
     }
+
 
     // PATCH: Supabase Storage'a dosya yükle ve dokümanları güncelle
     if (method === 'PATCH') {

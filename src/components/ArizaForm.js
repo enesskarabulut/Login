@@ -9,6 +9,7 @@ function ArizaForm({ onCreate }) {
     il: 'ANTALYA', 
     ilce: '',
     mahalle: '',
+    sokak: '', // Yeni alan: Sokak No
     binaNo: '',
     daireNo: '',
     usta: '',
@@ -24,10 +25,23 @@ function ArizaForm({ onCreate }) {
     const { name, value } = e.target;
 
     if (name === 'ilce') {
-      // ilçe değişince mahalle, binaNo, daireNo sıfırlanır
-      setFormData((prev) => ({ ...prev, ilce: value, mahalle: '', binaNo: '', daireNo: '' }));
+      // ilçe değişince mahalle, sokak, binaNo, daireNo sıfırlanır
+      setFormData((prev) => ({
+        ...prev,
+        ilce: value,
+        mahalle: '',
+        sokak: '',
+        binaNo: '',
+        daireNo: '',
+      }));
     } else if (name === 'mahalle') {
-      setFormData((prev) => ({ ...prev, mahalle: value, binaNo: '', daireNo: '' }));
+      setFormData((prev) => ({
+        ...prev,
+        mahalle: value,
+        sokak: '',
+        binaNo: '',
+        daireNo: '',
+      }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -84,6 +98,7 @@ function ArizaForm({ onCreate }) {
       il: 'ANTALYA',
       ilce: '',
       mahalle: '',
+      sokak: '', // Sokak No sıfırlama
       binaNo: '',
       daireNo: '',
       usta: '',
@@ -187,7 +202,20 @@ function ArizaForm({ onCreate }) {
           </div>
         )}
 
-        {/* Bina No ve Daire No, mahalle seçildiyse göster */}
+        {/* Sokak No */}
+        {formData.mahalle && (
+          <div>
+            <label>Sokak No:</label>
+            <input
+              name="sokak"
+              value={formData.sokak}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        )}
+
+        {/* Bina No ve Daire No */}
         {formData.mahalle && (
           <>
             <div>
@@ -245,7 +273,7 @@ function ArizaForm({ onCreate }) {
           />
         </div>
 
-        {/* Tarih (status ileri tarihli ise) */}
+        {/* Tarih */}
         {formData.status === 'ileri tarihli' && (
           <div>
             <label>Tarih:</label>

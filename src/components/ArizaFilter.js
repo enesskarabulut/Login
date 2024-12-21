@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import antalyaData from '../data/antalya.json'; // JSON dosyasının yolunu doğru ayarladığınızdan emin olun
 
 function ArizaFilter({ onFilter }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -7,111 +8,176 @@ function ArizaFilter({ onFilter }) {
     name: '',
     surname: '',
     msisdn: '',
-    il: '',
+    il: 'ANTALYA',
     ilce: '',
     mahalle: '',
-    binaNo: '',
-    daireNo: '',
-    usta: '',
     status: '',
-    ucret: '',
-    tarih: '',
+    ucretAraligi: '',
   });
 
+  const [ilceler, setIlceler] = useState([]);
+  const [mahalleler, setMahalleler] = useState([]);
+
+  // İl seçilince ilçe listesini güncelle
+  useEffect(() => {
+    if (filters.il) {
+      const ilceListesi = Object.keys(antalyaData[filters.il] || {});
+      setIlceler(ilceListesi);
+      // İl değiştiğinde ilçe ve mahalle sıfırlansın
+      setFilters((prev) => ({ ...prev, ilce: '', mahalle: '' }));
+    }
+  }, [filters.il]);
+
+  // İlçe seçilince mahalle listesini güncelle
+  useEffect(() => {
+    if (filters.ilce) {
+      const mahalleListesi = antalyaData[filters.il][filters.ilce] || [];
+      setMahalleler(mahalleListesi);
+      // İlçe değiştiğinde mahalle sıfırlansın
+      setFilters((prev) => ({ ...prev, mahalle: '' }));
+    }
+  }, [filters.ilce, filters.il]);
+
+  // Form alanları değiştikçe filtre objesini güncelle
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Filtreleme butonuna basıldığında üst komponenti bilgilendir
   const handleFilter = (e) => {
     e.preventDefault();
     onFilter(filters);
   };
 
+  // Temizle butonuna basıldığında her şeyi sıfırla
   const handleReset = () => {
     const emptyFilters = {
       name: '',
       surname: '',
       msisdn: '',
-      il: '',
+      il: 'ANTALYA',
       ilce: '',
       mahalle: '',
-      binaNo: '',
-      daireNo: '',
-      usta: '',
       status: '',
-      ucret: '',
-      tarih: '',
+      ucretAraligi: '',
     };
     setFilters(emptyFilters);
     onFilter(emptyFilters);
   };
 
   return (
-    <div className="filter-container" style={{ marginBottom: '1em', textAlign: 'center' }}>
-      <button 
-        type="button" 
-        onClick={() => setIsOpen(!isOpen)} 
-        className='filter-button'
-        style={{ 
-          marginBottom: '0.5em',
-          backgroundColor: '#007BFF',
-          color: '#fff',
-          border: 'none',
-          padding: '10px 15px',
-          cursor: 'pointer',
-          borderRadius: '4px',
-        }}
-      >
-        {isOpen ? 'Filtreyi Kapat' : 'Filtreyi Aç'}
-      </button>
+    <div className="ariza-filter-container" style={styles.filterContainerOuter}>
+      {/* Filtre Aç/Kapat Butonu */}
+      <div style={styles.toggleRow}>
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          style={styles.toggleButton}
+        >
+          {isOpen ? 'Filtreyi Kapat' : 'Filtreyi Aç'}
+        </button>
+      </div>
 
       {isOpen && (
-        <form 
-          onSubmit={handleFilter} 
-          style={{ 
-            maxWidth: '800px',
-            margin: '0 auto',
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px,1fr))', 
-            gap: '1em',
-            padding: '1em',
-            backgroundColor: '#f9f9f9',
-            borderRadius: '8px',
-          }}
-        >
-          {/* Ortak stil alanları */}
-          {[
-            { label: 'Müşteri Adı:', name: 'name', placeholder: '' },
-            { label: 'Müşteri Soyadı:', name: 'surname', placeholder: '' },
-            { label: 'Telefon Numarası:', name: 'msisdn', placeholder: '05XXXXXXXXX' },
-            { label: 'İl:', name: 'il', placeholder: '' },
-            { label: 'İlçe:', name: 'ilce', placeholder: '' },
-            { label: 'Mahalle:', name: 'mahalle', placeholder: '' },
-            { label: 'Bina No:', name: 'binaNo', placeholder: '' },
-            { label: 'Daire No:', name: 'daireNo', placeholder: '' },
-            { label: 'Usta:', name: 'usta', placeholder: '' },
-          ].map((field) => (
-            <div key={field.name} style={{ display: 'flex', flexDirection: 'column' }}>
-              <label style={{ marginBottom: '5px', fontWeight: 'bold' }}>{field.label}</label>
-              <input 
-                name={field.name} 
-                value={filters[field.name]} 
-                onChange={handleChange} 
-                placeholder={field.placeholder}
-                style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} 
-              />
-            </div>
-          ))}
+        <form onSubmit={handleFilter} style={styles.filterForm}>
+          {/* Müşteri Adı */}
+          <div className="filter-input-group" style={styles.inputGroup}>
+            <label style={styles.label}>Müşteri Adı:</label>
+            <input
+              name="name"
+              value={filters.name}
+              onChange={handleChange}
+              style={styles.input}
+            />
+          </div>
+
+          {/* Müşteri Soyadı */}
+          <div className="filter-input-group" style={styles.inputGroup}>
+            <label style={styles.label}>Müşteri Soyadı:</label>
+            <input
+              name="surname"
+              value={filters.surname}
+              onChange={handleChange}
+              style={styles.input}
+            />
+          </div>
+
+          {/* Telefon Numarası */}
+          <div className="filter-input-group" style={styles.inputGroup}>
+            <label style={styles.label}>Telefon Numarası:</label>
+            <input
+              name="msisdn"
+              value={filters.msisdn}
+              onChange={handleChange}
+              placeholder="05XXXXXXXXX"
+              style={styles.input}
+            />
+          </div>
+
+          {/* İl */}
+          <div className="filter-input-group" style={styles.inputGroup}>
+            <label style={styles.label}>İl:</label>
+            <select
+              name="il"
+              value={filters.il}
+              onChange={handleChange}
+              style={styles.select}
+            >
+              {Object.keys(antalyaData).map((il) => (
+                <option key={il} value={il}>
+                  {il}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* İlçe */}
+          <div className="filter-input-group" style={styles.inputGroup}>
+            <label style={styles.label}>İlçe:</label>
+            <select
+              name="ilce"
+              value={filters.ilce}
+              onChange={handleChange}
+              style={styles.select}
+              disabled={!filters.il}
+            >
+              <option value="">Tümü</option>
+              {ilceler.map((ilce) => (
+                <option key={ilce} value={ilce}>
+                  {ilce}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Mahalle */}
+          <div className="filter-input-group" style={styles.inputGroup}>
+            <label style={styles.label}>Mahalle:</label>
+            <select
+              name="mahalle"
+              value={filters.mahalle}
+              onChange={handleChange}
+              style={styles.select}
+              disabled={!filters.ilce}
+            >
+              <option value="">Tümü</option>
+              {mahalleler.map((mahalle) => (
+                <option key={mahalle} value={mahalle}>
+                  {mahalle}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Status */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label style={{ marginBottom: '5px', fontWeight: 'bold' }}>Status:</label>
-            <select 
-              name="status" 
-              value={filters.status} 
-              onChange={handleChange} 
-              style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+          <div className="filter-input-group" style={styles.inputGroup}>
+            <label style={styles.label}>Status:</label>
+            <select
+              name="status"
+              value={filters.status}
+              onChange={handleChange}
+              style={styles.select}
             >
               <option value="">Tümü</option>
               <option value="işleme alındı">işleme alındı</option>
@@ -121,59 +187,32 @@ function ArizaFilter({ onFilter }) {
             </select>
           </div>
 
-          {/* Ücret */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label style={{ marginBottom: '5px', fontWeight: 'bold' }}>Ücret:</label>
-            <input 
-              type="number" 
-              name="ucret" 
-              value={filters.ucret} 
-              onChange={handleChange} 
-              placeholder="örn: 100.00"
-              step="0.01"
-              style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-            />
-          </div>
-
-          {/* Tarih */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label style={{ marginBottom: '5px', fontWeight: 'bold' }}>Tarih:</label>
-            <input 
-              type="date" 
-              name="tarih" 
-              value={filters.tarih} 
+          {/* Ücret Aralığı */}
+          <div className="filter-input-group" style={styles.inputGroup}>
+            <label style={styles.label}>Ücret Aralığı:</label>
+            <select
+              name="ucretAraligi"
+              value={filters.ucretAraligi}
               onChange={handleChange}
-              style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-            />
+              style={styles.select}
+            >
+              <option value="">Tümü</option>
+              <option value="1-50">1-50 TL</option>
+              <option value="50-250">50-250 TL</option>
+              <option value="250-500">250-500 TL</option>
+              <option value="500+">500 TL üstü</option>
+            </select>
           </div>
 
-          <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '10px' }}>
-            <button 
-              type="submit" 
-              className='filter-button'
-              style={{
-                backgroundColor: '#28a745',
-                color: '#fff',
-                border: 'none',
-                padding: '10px 20px',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
+          {/* Filtrele ve Temizle Butonları */}
+          <div style={styles.buttonRow}>
+            <button type="submit" style={{ ...styles.button, backgroundColor: '#28a745' }}>
               Filtrele
             </button>
-            <button 
-              type="button" 
-              onClick={handleReset} 
-              className='filter-button' 
-              style={{ 
-                backgroundColor: '#6c757d', 
-                color: '#fff',
-                border: 'none',
-                padding: '10px 20px',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
+            <button
+              type="button"
+              onClick={handleReset}
+              style={{ ...styles.button, backgroundColor: '#6c757d' }}
             >
               Temizle
             </button>
@@ -183,5 +222,74 @@ function ArizaFilter({ onFilter }) {
     </div>
   );
 }
+
+/* Stil nesneleri */
+const styles = {
+  filterContainerOuter: {
+    margin: '0 auto',
+    marginBottom: '1em',
+    maxWidth: '1200px',
+    backgroundColor: '#fff',
+    borderRadius: '6px',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+    padding: '0.5em',
+  },
+  toggleRow: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+  },
+  toggleButton: {
+    backgroundColor: '#007BFF',
+    color: '#fff',
+    border: 'none',
+    padding: '10px 15px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+  },
+  filterForm: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '0.5em',
+    marginTop: '0.5em',
+    padding: '0.5em',
+  },
+  inputGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  label: {
+    marginBottom: '3px',
+    fontWeight: 'bold',
+    fontSize: '14px',
+  },
+  input: {
+    padding: '8px',
+    borderRadius: '4px',
+    border: '1px solid #ccc',
+    fontSize: '14px',
+  },
+  select: {
+    padding: '8px',
+    borderRadius: '4px',
+    border: '1px solid #ccc',
+    fontSize: '14px',
+  },
+  buttonRow: {
+    gridColumn: '1 / -1',
+    display: 'flex',
+    gap: '10px',
+    justifyContent: 'center',
+    marginTop: '0.5em',
+  },
+  button: {
+    color: '#fff',
+    border: 'none',
+    padding: '8px 20px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+  },
+};
 
 export default ArizaFilter;

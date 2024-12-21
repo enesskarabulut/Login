@@ -3,14 +3,16 @@ import { fetchArizaById, updateAriza } from '../api/api';
 import antalyaData from '../data/antalya.json';
 
 function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
+  // Arıza verisini ve form alanlarını tutacak state'ler
   const [ariza, setAriza] = useState(null);
 
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [msisdn, setMsisdn] = useState('');
-  const [il, setIl] = useState('ANTALYA');
+  const [il, setIl] = useState('');
   const [ilce, setIlce] = useState('');
   const [mahalle, setMahalle] = useState('');
+  const [sokak, setSokak] = useState('');
   const [binaNo, setBinaNo] = useState('');
   const [daireNo, setDaireNo] = useState('');
   const [usta, setUsta] = useState('');
@@ -21,31 +23,48 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
   const [file, setFile] = useState(null);
   const [dokumanlar, setDokumanlar] = useState([]);
 
-  // İlçeleri ve Mahalleleri oluşturmak için verileri çek
-  const ilceler = Object.keys(antalyaData["ANTALYA"]);
-  const mahalleler = ilce ? antalyaData["ANTALYA"][ilce] : [];
+  // Antalya verilerinden ilçe ve mahalle listesini oluşturma
+  // Not: Şu an "ANTALYA" varsayıyoruz. Gerekirse il seçimini de dinamik yapabilirsiniz.
+  const ilceler = antalyaData["ANTALYA"] ? Object.keys(antalyaData["ANTALYA"]) : [];
+  const mahalleler = ilce && antalyaData["ANTALYA"][ilce]
+    ? antalyaData["ANTALYA"][ilce]
+    : [];
 
-  // Arıza verisini yükle
+  // Arıza verisini API'den çeken fonksiyon
   const loadAriza = async () => {
     try {
       const { data } = await fetchArizaById(id);
-      setAriza(data);
-      setName(data.name || '');
-      setSurname(data.surname || '');
-      setMsisdn(data.msisdn || '');
-      setIl(data.il || 'ANTALYA');
-      setIlce(data.ilce || '');
-      setMahalle(data.mahalle || '');
-      setBinaNo(data.binaNo || '');
-      setDaireNo(data.daireNo || '');
-      setUsta(data.usta || '');
-      setStatus(data.status || '');
-      setUcret(data.ucret || '');
-      setTarih(data.tarih || '');
-      setDetay(data.detay || '');
 
-      const dokumanField = data.dokuman || '';
-      setDokumanlar(dokumanField ? dokumanField.split(',') : []);
+      // API'den dönen veri [ {...} ] şeklindeyse ilk elemanı alıyoruz:
+      if (Array.isArray(data) && data.length > 0) {
+        const arizaData = data[0]; 
+        setAriza(arizaData);
+
+        // Form alanlarını API’den dönen verilerle doldur
+        setName(arizaData.name || '');
+        setSurname(arizaData.surname || '');
+        setMsisdn(arizaData.msisdn || '');
+        // İl verisi null/boş ise varsayılan "ANTALYA" atayabilirsiniz:
+        setIl(arizaData.il || 'ANTALYA');
+        setIlce(arizaData.ilce || '');
+        setMahalle(arizaData.mahalle || '');
+        setSokak(arizaData.sokak || '');
+        setBinaNo(arizaData.binaNo || '');
+        setDaireNo(arizaData.daireNo || '');
+        setUsta(arizaData.usta || '');
+        setStatus(arizaData.status || '');
+        setUcret(arizaData.ucret !== null ? arizaData.ucret : '');
+        setTarih(arizaData.tarih || '');
+        setDetay(arizaData.detay || '');
+
+        // Doküman varsa virgülle ayrılmış linkleri dizi haline getir
+        const dokumanField = arizaData.dokuman || '';
+        setDokumanlar(dokumanField ? dokumanField.split(',') : []);
+      }
+      // Eğer API'niz doğrudan bir obje döndürüyorsa:
+      // const arizaData = data;
+      // setAriza(arizaData);
+      // ... (aşağıdaki set'leri arizaData ile yapın)
 
       if (onDetailLoaded) onDetailLoaded();
     } catch (error) {
@@ -53,27 +72,32 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
     }
   };
 
+  // Bileşen ilk yüklendiğinde veya "id" değiştiğinde arıza verisini yükleyelim
   useEffect(() => {
     loadAriza();
+    // eslint-disable-next-line
   }, [id]);
 
-  // İlçe değiştiğinde mahalle, binaNo, daireNo sıfırlama mantığı
+  // İlçe seçilince mahalleyi, sokak, bina, daire alanlarını sıfırla
   const handleIlceChange = (e) => {
     const selectedIlce = e.target.value;
     setIlce(selectedIlce);
     setMahalle('');
+    setSokak('');
     setBinaNo('');
     setDaireNo('');
   };
 
+  // Mahalle seçilince sokak, bina, daireyi sıfırla
   const handleMahalleChange = (e) => {
     const selectedMahalle = e.target.value;
     setMahalle(selectedMahalle);
+    setSokak('');
     setBinaNo('');
     setDaireNo('');
   };
 
-  // Arıza güncelleme işlemi
+  // Güncelle butonuna tıklanınca API'ye PATCH/PUT isteği
   const handleUpdate = async () => {
     const arizaData = {
       name,
@@ -82,18 +106,26 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
       il,
       ilce,
       mahalle,
+      sokak,
       binaNo,
       daireNo,
       usta,
       status,
+      // Boş gönderilirse API hata verebilir diye null veya sayı çeviriyoruz
       ucret: ucret ? Number(ucret) : null,
       detay,
       tarih: status === 'ileri tarihli' ? tarih : null,
     };
 
-    await updateAriza(id, arizaData);
-    loadAriza();
-    loadArizalar();
+    try {
+      await updateAriza(id, arizaData);
+      // Güncel veriyi tekrar yükle
+      loadAriza();
+      // Listeyi de güncellemek istiyorsanız
+      loadArizalar();
+    } catch (error) {
+      console.error('Güncelleme hatası:', error.message);
+    }
   };
 
   // Dosya yükleme işlemi
@@ -103,7 +135,7 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
     const reader = new FileReader();
     reader.onloadend = async () => {
       const base64Data = reader.result.split(',')[1];
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token'); // Token varsa
 
       try {
         const response = await fetch(`/api/arizalar?id=${id}`, {
@@ -112,7 +144,12 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ file: { name: file.name, content: base64Data } }),
+          body: JSON.stringify({
+            file: {
+              name: file.name,
+              content: base64Data,
+            },
+          }),
         });
 
         if (!response.ok) {
@@ -120,9 +157,8 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
           throw new Error(errorData.message || 'Yükleme başarısız');
         }
 
-        const responseData = await response.json();
-        console.log('Yüklenen dosya URL:', responseData.dokumanURL);
         alert('Dosya başarıyla yüklendi!');
+        // Güncel doküman listesini görmek için veriyi tekrar yükleyelim
         loadAriza();
       } catch (error) {
         console.error('Dosya yükleme hatası:', error.message);
@@ -138,160 +174,200 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
   return (
     <div className="detail-container">
       <h2>Arıza Detayı #{ariza.id}</h2>
+      <div className="detail-form-grid">
+        {/* Müşteri Adı */}
+        <div className="form-group">
+          <label>Müşteri Adı:</label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Müşteri Adı"
+            required
+          />
+        </div>
 
-      {/* Müşteri Adı */}
-      <div>
-        <label>Müşteri Adı:</label>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Müşteri Adı"
-          required
-        />
-      </div>
+        {/* Müşteri Soyadı */}
+        <div className="form-group">
+          <label>Müşteri Soyadı:</label>
+          <input
+            value={surname}
+            onChange={(e) => setSurname(e.target.value)}
+            placeholder="Müşteri Soyadı"
+            required
+          />
+        </div>
 
-      {/* Müşteri Soyadı */}
-      <div>
-        <label>Müşteri Soyadı:</label>
-        <input
-          value={surname}
-          onChange={(e) => setSurname(e.target.value)}
-          placeholder="Müşteri Soyadı"
-          required
-        />
-      </div>
+        {/* Telefon Numarası */}
+        <div className="form-group">
+          <label>Telefon Numarası:</label>
+          <input
+            value={msisdn}
+            onChange={(e) => setMsisdn(e.target.value)}
+            placeholder="05XXXXXXXXX"
+            pattern="05[0-9]{9}"
+            required
+          />
+        </div>
 
-      {/* Telefon Numarası */}
-      <div>
-        <label>Telefon Numarası:</label>
-        <input
-          value={msisdn}
-          onChange={(e) => setMsisdn(e.target.value)}
-          placeholder="05XXXXXXXXX"
-          pattern="05[0-9]{9}"
-          required
-        />
-      </div>
+        {/* İl (Sabit: ANTALYA ya da API'den gelen) */}
+        <div className="form-group">
+          <label>İl:</label>
+          <input
+            value={il}
+            onChange={(e) => setIl(e.target.value)}
+            placeholder="İl"
+            readOnly
+          />
+        </div>
 
-      {/* İl */}
-      <div>
-        <label>İl:</label>
-        <input value={il} readOnly />
-      </div>
-
-      {/* İlçe */}
-      <div>
-        <label>İlçe:</label>
-        <select value={ilce} onChange={handleIlceChange} required>
-          <option value="">-- İlçe Seçin --</option>
-          {ilceler.map((ic) => (
-            <option key={ic} value={ic}>{ic}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Mahalle */}
-      {ilce && (
-        <div>
-          <label>Mahalle:</label>
+        {/* İlçe */}
+        <div className="form-group">
+          <label>İlçe:</label>
           <select
-            name="mahalle"
-            value={mahalle}
-            onChange={handleMahalleChange}
+            value={ilce}
+            onChange={handleIlceChange}
             required
           >
-            <option value="">-- Mahalle Seçin --</option>
-            {mahalleler.map((m) => (
-              <option key={m} value={m}>{m}</option>
+            <option value="">-- İlçe Seçin --</option>
+            {ilceler.map((ic) => (
+              <option key={ic} value={ic}>
+                {ic}
+              </option>
             ))}
           </select>
         </div>
-      )}
 
-      {/* Bina No */}
-      {mahalle && (
-        <div>
-          <label>Bina No:</label>
+        {/* Mahalle */}
+        {ilce && (
+          <div className="form-group">
+            <label>Mahalle:</label>
+            <select
+              value={mahalle}
+              onChange={handleMahalleChange}
+              required
+            >
+              <option value="">-- Mahalle Seçin --</option>
+              {mahalleler.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Sokak */}
+        {mahalle && (
+          <div className="form-group">
+            <label>Sokak No:</label>
+            <input
+              value={sokak}
+              onChange={(e) => setSokak(e.target.value)}
+              placeholder="Sokak No"
+              required
+            />
+          </div>
+        )}
+
+        {/* Bina No */}
+        {mahalle && (
+          <div className="form-group">
+            <label>Bina No:</label>
+            <input
+              value={binaNo}
+              onChange={(e) => setBinaNo(e.target.value)}
+              placeholder="Bina No"
+              required
+            />
+          </div>
+        )}
+
+        {/* Daire No */}
+        {mahalle && (
+          <div className="form-group">
+            <label>Daire No:</label>
+            <input
+              value={daireNo}
+              onChange={(e) => setDaireNo(e.target.value)}
+              placeholder="Daire No"
+              required
+            />
+          </div>
+        )}
+
+        {/* Usta */}
+        <div className="form-group">
+          <label>Usta:</label>
           <input
-            value={binaNo}
-            onChange={(e) => setBinaNo(e.target.value)}
-            placeholder="Bina No"
-            required
+            value={usta}
+            onChange={(e) => setUsta(e.target.value)}
           />
         </div>
-      )}
 
-      {/* Daire No */}
-      {mahalle && (
-        <div>
-          <label>Daire No:</label>
+        {/* Status */}
+        <div className="form-group">
+          <label>Status:</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
+            <option value="işleme alındı">işleme alındı</option>
+            <option value="tamamlandı">tamamlandı</option>
+            <option value="ertelendi">ertelendi</option>
+            <option value="ileri tarihli">ileri tarihli</option>
+          </select>
+        </div>
+
+        {/* Ücret */}
+        <div className="form-group">
+          <label>Ücret:</label>
           <input
-            value={daireNo}
-            onChange={(e) => setDaireNo(e.target.value)}
-            placeholder="Daire No"
-            required
+            type="number"
+            value={ucret}
+            onChange={(e) => setUcret(e.target.value)}
           />
         </div>
-      )}
 
-      {/* Usta */}
-      <div>
-        <label>Usta:</label>
-        <input value={usta} onChange={(e) => setUsta(e.target.value)} />
-      </div>
+        {/* İleri tarihli ise Tarih alanı */}
+        {status === 'ileri tarihli' && (
+          <div className="form-group">
+            <label>Tarih:</label>
+            <input
+              type="date"
+              value={tarih || ''}
+              onChange={(e) => setTarih(e.target.value)}
+            />
+          </div>
+        )}
 
-      {/* Status */}
-      <div>
-        <label>Status:</label>
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="işleme alındı">işleme alındı</option>
-          <option value="tamamlandı">tamamlandı</option>
-          <option value="ertelendi">ertelendi</option>
-          <option value="ileri tarihli">ileri tarihli</option>
-        </select>
-      </div>
-
-      {/* Ücret */}
-      <div>
-        <label>Ücret:</label>
-        <input
-          type="number"
-          value={ucret}
-          onChange={(e) => setUcret(e.target.value)}
-        />
-      </div>
-
-      {/* Tarih (status ileri tarihli ise) */}
-      {status === 'ileri tarihli' && (
-        <div>
-          <label>Tarih:</label>
-          <input
-            type="date"
-            value={tarih}
-            onChange={(e) => setTarih(e.target.value)}
+        {/* Detay */}
+        <div className="form-group full-width">
+          <label>Detay:</label>
+          <textarea
+            value={detay}
+            onChange={(e) => setDetay(e.target.value)}
+            rows="3"
           />
         </div>
-      )}
-
-      {/* Detay */}
-      <div>
-        <label>Detay:</label>
-        <textarea
-          value={detay}
-          onChange={(e) => setDetay(e.target.value)}
-          rows="3"
-        />
       </div>
 
-      <button onClick={handleUpdate}>Güncelle</button>
+      {/* Güncelle Butonu */}
+      <button onClick={handleUpdate} className="update-button" style={{ marginTop: '10px' }}>
+        Güncelle
+      </button>
+
+      <hr />
 
       {/* Doküman Yükleme */}
-      <hr />
       <h3>Doküman Yükle</h3>
-      <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-      <button onClick={handleUpload}>Yükle</button>
+      <input
+        type="file"
+        onChange={(e) => setFile(e.target.files[0])}
+      />
+      <button onClick={handleUpload} style={{ marginTop: '10px' }}>
+        Yükle
+      </button>
 
-      {/* Yüklenen Dokümanlar */}
       <h3>Yüklenen Dokümanlar</h3>
       {dokumanlar.length > 0 ? (
         <ul>
@@ -301,7 +377,7 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
                 href={doc.trim()}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: '#007BFF', textDecoration: 'underline' }}
+                className="dokuman-link"
               >
                 {`Doküman ${index + 1}`}
               </a>
@@ -313,7 +389,9 @@ function ArizaDetailPage({ id, loadArizalar, onClose, onDetailLoaded }) {
       )}
 
       <hr />
-      <button onClick={onClose}>Kapat</button>
+      <button onClick={onClose} style={{ backgroundColor: '#6c757d', marginTop: '10px' }}>
+        Kapat
+      </button>
     </div>
   );
 }
