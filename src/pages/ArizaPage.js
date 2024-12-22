@@ -4,6 +4,8 @@ import ArizaList from '../components/ArizaList';
 import ArizaForm from '../components/ArizaForm';
 import ArizaFilter from '../components/ArizaFilter';
 import ArizaDetailPage from './ArizaDetailPage';
+import ArizaMap from '../components/ArizaMap'; // ArizaMap bileşenini ekledik.
+import 'leaflet/dist/leaflet.css';
 
 function ArizaPage() {
   const [arizalar, setArizalar] = useState([]);
@@ -14,7 +16,7 @@ function ArizaPage() {
   const [filters, setFilters] = useState({});
   const [isCreating, setIsCreating] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [filtering, setFiltering] = useState(false); // Filtreleme sırasında overlay göstermek için
+  const [filtering, setFiltering] = useState(false);
   const detailRef = useRef(null);
   const limit = 10;
 
@@ -22,6 +24,7 @@ function ArizaPage() {
     setLoading(true);
     try {
       const { data } = await fetchArizalar({ ...givenFilters, page, limit });
+      console.log('Gelen Arızalar:', data); // Gelen API yanıtını konsola yazdır.
       if (page === 1) {
         setArizalar(data);
       } else {
@@ -31,12 +34,12 @@ function ArizaPage() {
       console.error('Arızalar yüklenirken hata oluştu:', error.message);
     } finally {
       setLoading(false);
-      setFiltering(false); // Filtreleme tamamlandığında overlay kapat
+      setFiltering(false);
     }
   };
 
   useEffect(() => {
-    if (selectedView === 'arizalar') {
+    if (selectedView === 'arizalar' || selectedView === 'Anasayfa') {
       loadArizalar(filters, currentPage);
     }
   }, [selectedView]);
@@ -44,13 +47,11 @@ function ArizaPage() {
   const handleFilter = (newFilters) => {
     setFilters(newFilters);
     setCurrentPage(1);
-    setFiltering(true); // Filtre uygulandığında overlay aç
-    if (selectedView === 'arizalar') {
+    setFiltering(true);
+    if (selectedView === 'arizalar' || selectedView === 'Anasayfa') {
       loadArizalar(newFilters, 1);
       setSelectedArizaId(null);
     } else {
-      // Eğer filtre "arizalar" görünümünde değilken yapılırsa,
-      // bir sonraki arizalar görünümüne geçildiğinde filtre uygulanacaktır.
       setFiltering(false);
     }
   };
@@ -88,7 +89,7 @@ function ArizaPage() {
     setSelectedArizaId(null);
     setCurrentPage(1);
     setArizalar([]);
-    if (view === 'arizalar') {
+    if (view === 'arizalar' || view === 'Anasayfa') {
       loadArizalar(filters, 1);
     }
   };
@@ -107,7 +108,6 @@ function ArizaPage() {
 
   return (
     <div style={{ position: 'relative' }}>
-      {/* Overlay (Filtreleme sırasında) */}
       {filtering && (
         <div style={{
           position: 'absolute',
@@ -129,7 +129,6 @@ function ArizaPage() {
         </div>
       )}
 
-      {/* Başlık ve Butonlar */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h1>Arıza Kayıt Sistemi</h1>
         <div className="view-buttons" style={{ marginTop: '10px' }}>
@@ -145,21 +144,19 @@ function ArizaPage() {
         </div>
       </div>
 
-      {/* Overlay Ekran Karartma (Arıza Oluşturma) */}
       {isCreating && (
         <div className="overlay">
           <span>Arıza oluşturuluyor...</span>
         </div>
       )}
 
-      {/* Başarı Mesajı */}
       {successMessage && <div className="success-message">{successMessage}</div>}
 
-      {/* Görünüm */}
       {selectedView === 'Anasayfa' && (
         <div>
           <h2>Anasayfa</h2>
-          <p>Hoşgeldiniz! Buradan yeni arıza ekleyebilir veya mevcut arızaları görüntüleyebilirsiniz.</p>
+          <p>Harita üzerinde arızaların yerini görebilirsiniz.</p>
+          <ArizaMap arizalar={arizalar} />
         </div>
       )}
 
