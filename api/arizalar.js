@@ -37,10 +37,10 @@ module.exports = async (req, res) => {
         page = 1,
         limit = 10,
       } = req.query;
-
+    
       const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
       let query = supabase.from('arizalar').select('*', { count: 'exact' });
-
+    
       if (name) query = query.ilike('name', `%${name}%`);
       if (surname) query = query.ilike('surname', `%${surname}%`);
       if (msisdn) query = query.ilike('msisdn', `%${msisdn}%`);
@@ -51,14 +51,14 @@ module.exports = async (req, res) => {
       if (binaNo) query = query.ilike('binaNo', `%${binaNo}%`);
       if (daireNo) query = query.ilike('daireNo', `%${daireNo}%`);
       if (usta) query = query.ilike('usta', `%${usta}%`);
-
+    
       // + -> ' ' değişimi ve trim
       if (status && status.trim() !== '') {
         let replaced = status.replace(/\+/g, ' ');
         replaced = replaced.trim();
         query = query.eq('status', replaced);
       }
-
+    
       // Fiyat aralığı filtresi
       if (ucretAraligi) {
         switch (ucretAraligi) {
@@ -78,17 +78,19 @@ module.exports = async (req, res) => {
             break;
         }
       }
-
+    
       if (tarih) query = query.eq('tarih', tarih);
-
+    
+      // Burada DESC sıralama ekleniyor
+      query = query.order('id', { ascending: false }); // ID'ye göre azalan sıralama
       query = query.range(offset, offset + parseInt(limit, 10) - 1);
-
+    
       const { data: arizalar, error } = await query;
       if (error) {
         console.error('Hata:', error);
         return res.status(500).json({ message: 'Veri çekilirken hata oluştu', error: error.message });
       }
-
+    
       const arizaListesi = arizalar.map((ariza) => ({
         id: ariza.id,
         il: ariza.il,
@@ -107,9 +109,10 @@ module.exports = async (req, res) => {
         msisdn: ariza.msisdn,
         dokuman: ariza.dokuman,
       }));
-
+    
       return res.status(200).json(arizaListesi);
     }
+    
 
     // POST: Yeni arıza oluştur
     if (method === 'POST') {

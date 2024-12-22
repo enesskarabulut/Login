@@ -153,12 +153,15 @@ function ArizaPage() {
       {successMessage && <div className="success-message">{successMessage}</div>}
 
       {selectedView === 'Anasayfa' && (
-        <div>
-          <h2>Anasayfa</h2>
-          <p>Harita üzerinde arızaların yerini görebilirsiniz.</p>
-          <ArizaMap arizalar={arizalar} />
-        </div>
-      )}
+  <div>
+    <p style={{ textAlign: 'center', margin: '10px 0', color: '#666' }}>
+      Harita üzerinde arızaların bulunduğu mahallelerin konumlarını görebilirsiniz.
+    </p>
+    <div className="map-wrapper">
+      <ArizaMap arizalar={arizalar} />
+    </div>
+  </div>
+)}
 
       {selectedView === 'yeniAriza' && <ArizaForm onCreate={handleCreate} />}
 
