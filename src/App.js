@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
 import ArizaPage from './pages/ArizaPage';
-import LogoutButton from './components/LogoutButton'; // Logout butonu için ayrı component
 import { getToken, removeToken } from './utils/auth';
 import jwtDecode from 'jwt-decode';
 
@@ -31,10 +30,7 @@ const App = () => {
         setIsAuthenticated(true);
     };
 
-    const handleLogout = () => {
-        removeToken();
-        setIsAuthenticated(false);
-    };
+
 
     return (
         <div className="app-container">
@@ -42,8 +38,7 @@ const App = () => {
                 <Login onLogin={handleLogin} />
             ) : (
                 <>
-                    <LogoutButton onLogout={handleLogout} />
-                    <ArizaPage />
+                    <ArizaPage setIsAuthenticated={setIsAuthenticated} />
                 </>
             )}
         </div>

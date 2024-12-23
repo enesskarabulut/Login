@@ -42,6 +42,10 @@ button {
 button:hover {
     background: #005bb5;
 }
+.filter-input-group input{
+    width: unset;
+    display: flex;
+}
 
 input, select, textarea {
     width: 100%;
@@ -196,10 +200,13 @@ table tr:nth-child(even) {
     margin-top: 20px;
 }
 
+.logoutButtonContainer{
+    display: flex;
+    justify-content: flex-end;
+}
+
 .logout-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+    width: unset;
     padding: 8px 15px;
     background-color: #e74c3c;
     color: white;
