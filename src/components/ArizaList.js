@@ -49,7 +49,6 @@ function ArizaList({
         <h2>Arızalar</h2>
         <button
           onClick={() => {
-            loadArizalar();
             setCurrentPage(1);
           }}
           style={styles.refreshButton}
