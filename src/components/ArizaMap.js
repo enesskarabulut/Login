@@ -20,13 +20,13 @@ const fetchCoordinates = async (address) => {
   }
 
   try {
-    console.log('Geocoding için gönderilen adres:', address);
+    const params = new URLSearchParams({
+      q: address,
+      polygon_geojson: '1',
+      format: 'jsonv2',
+    }).toString();
 
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
-    );
-
-    console.log('API çağrısı tamamlandı. Status:', response.status);
+    const response = await fetch(`https://nominatim.openstreetmap.org/search.php?${params}`);
 
     if (!response.ok) {
       console.error(`Geocoding API hatası: ${response.status}`);
@@ -34,8 +34,6 @@ const fetchCoordinates = async (address) => {
     }
 
     const data = await response.json();
-
-    console.log('Geocoding API yanıtı:', data);
 
     if (data && data.length > 0) {
       const coordinates = {
@@ -54,6 +52,7 @@ const fetchCoordinates = async (address) => {
   }
 };
 
+
 function ArizaMap({ arizalar }) {
   const [markers, setMarkers] = useState([]);
 
@@ -62,16 +61,23 @@ function ArizaMap({ arizalar }) {
       try {
         const coordinates = await Promise.all(
           arizalar
-            .filter((ariza) => ariza.status !== 'tamamlandı' && ariza.status !== 'iptal') // Statüye göre filtrele
+            .filter((ariza) => ariza.status !== 'tamamlandı' && ariza.status !== 'iptal')
             .map(async (ariza) => {
               console.log('Filtrelenmiş Arıza Bilgisi:', ariza);
 
-              if (!ariza.mahalle || !ariza.ilce || !ariza.il) {
+              if (!ariza.mahalle || !ariza.ilce || !ariza.il || !ariza.sokak) {
                 console.warn('Eksik adres bilgisi:', ariza);
-                return null; // Eksik adresi atla
+                return null;
               }
 
-              const address = `${ariza.mahalle}, ${ariza.ilce}, ${ariza.il}`;
+              // Sokak bilgisi düzenleme fonksiyonu
+              const getFormattedStreet = (street) => {
+                if (!street) return '';
+                return street.toLowerCase().includes('sokak') ? street : `${street} sokak`;
+              };
+
+              // Adres query string formatında birleştirildi
+              const address = `${ariza.il}, ${ariza.ilce}, ${ariza.mahalle}, ${getFormattedStreet(ariza.sokak)}`;
               const coord = await fetchCoordinates(address);
 
               if (coord) {
@@ -81,8 +87,10 @@ function ArizaMap({ arizalar }) {
                   usta: ariza.usta,
                   detay: ariza.detay,
                   status: ariza.status,
+                  sokak: ariza.sokak,
                 };
               }
+
               console.warn('Koordinat bulunamadı:', address);
               return null;
             })
@@ -112,6 +120,7 @@ function ArizaMap({ arizalar }) {
             <div>
               <strong>Usta:</strong> {marker.usta} <br />
               <strong>Arıza ID:</strong> {marker.id} <br />
+              <strong>Sokak:</strong> {marker.sokak || 'Belirtilmemiş'} <br />
               <strong>Detay:</strong> {marker.detay || 'Belirtilmemiş'} <br />
               <strong>Status:</strong> {marker.status || 'Belirtilmemiş'}
             </div>

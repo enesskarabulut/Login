@@ -155,7 +155,7 @@ function ArizaPage() {
       {selectedView === 'Anasayfa' && (
   <div>
     <p style={{ textAlign: 'center', margin: '10px 0', color: '#666' }}>
-      Harita üzerinde arızaların bulunduğu mahallelerin konumlarını görebilirsiniz.
+      Harita üzerinde arızaların bulunduğu konumlarını görebilirsiniz.
     </p>
     <div className="map-wrapper">
       <ArizaMap arizalar={arizalar} />
