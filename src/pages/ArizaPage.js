@@ -6,8 +6,10 @@ import ArizaFilter from '../components/ArizaFilter';
 import ArizaDetailPage from './ArizaDetailPage';
 import ArizaMap from '../components/ArizaMap'; // ArizaMap bileşenini ekledik.
 import 'leaflet/dist/leaflet.css';
+import { removeToken } from '../utils/auth';
 
-function ArizaPage() {
+
+function ArizaPage({setIsAuthenticated}) {
   const [arizalar, setArizalar] = useState([]);
   const [selectedArizaId, setSelectedArizaId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -89,9 +91,6 @@ function ArizaPage() {
     setSelectedArizaId(null);
     setCurrentPage(1);
     setArizalar([]);
-    if (view === 'arizalar' || view === 'Anasayfa') {
-      loadArizalar(filters, 1);
-    }
   };
 
   const handleLoadMore = () => {
@@ -105,9 +104,20 @@ function ArizaPage() {
       detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
-
+  const handleLogout = () => {
+    removeToken();
+    setIsAuthenticated(false);
+  };
   return (
     <div style={{ position: 'relative' }}>
+      <div className='logoutButtonContainer'>
+        <button
+          onClick={handleLogout}
+          className="logout-button"
+        >
+          Logout
+        </button>
+      </div>
       {filtering && (
         <div style={{
           position: 'absolute',
@@ -153,15 +163,15 @@ function ArizaPage() {
       {successMessage && <div className="success-message">{successMessage}</div>}
 
       {selectedView === 'Anasayfa' && (
-  <div>
-    <p style={{ textAlign: 'center', margin: '10px 0', color: '#666' }}>
-      Harita üzerinde arızaların bulunduğu konumlarını görebilirsiniz.
-    </p>
-    <div className="map-wrapper">
-      <ArizaMap arizalar={arizalar} />
-    </div>
-  </div>
-)}
+        <div>
+          <p style={{ textAlign: 'center', margin: '10px 0', color: '#666' }}>
+            Harita üzerinde arızaların bulunduğu mahallelerin konumlarını görebilirsiniz.
+          </p>
+          <div className="map-wrapper">
+            <ArizaMap arizalar={arizalar} />
+          </div>
+        </div>
+      )}
 
       {selectedView === 'yeniAriza' && <ArizaForm onCreate={handleCreate} />}
 
@@ -170,7 +180,6 @@ function ArizaPage() {
           <ArizaFilter onFilter={handleFilter} />
           <ArizaList
             setCurrentPage={setCurrentPage}
-            loadArizalar={loadArizalar}
             loading={loading}
             arizalar={arizalar}
             onSelect={(id) => setSelectedArizaId(id)}
