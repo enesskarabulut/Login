@@ -80,7 +80,7 @@ function ArizaFilter({ onFilter }) {
       </div>
 
       {isOpen && (
-        <form onSubmit={handleFilter} style={styles.filterForm}>
+        <form className='filterFormContainer' onSubmit={handleFilter} style={styles.filterForm}>
           {/* Müşteri Adı */}
           <div className="filter-input-group" style={styles.inputGroup}>
             <label style={styles.label}>Müşteri Adı:</label>

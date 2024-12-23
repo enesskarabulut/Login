@@ -45,28 +45,29 @@ function ArizaList({
     <div style={styles.tableContainerOuter}>
       {/* Tablonun üstündeki başlık veya butonlar */}
       <div style={styles.tableHeader}>
-        <h2>Arızalar</h2>
+        <h2 style={{margin:'0'}} >Arızalar</h2>
         <button
           onClick={() => {
             setCurrentPage(1);
           }}
           style={styles.refreshButton}
         >
-          Refresh
+          Yenile
         </button>
       </div>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
+      <div style={{overflowX:'auto', width:'100%'}}>
 
       <table style={styles.table}>
-        <thead>
+        <thead >
           <tr>
             <th>ID</th>
             <th>Müşteri Bilgisi</th>
             <th>Telefon Numarası</th>
             <th>Adres</th>
             <th>Usta</th>
-            <th>Status</th>
+            <th>Statü</th>
             <th>Ücret</th>
             <th>Tarih</th>
             <th>Detay</th>
@@ -138,6 +139,7 @@ function ArizaList({
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
@@ -166,11 +168,15 @@ const styles = {
     padding: '8px 15px',
     borderRadius: '4px',
     cursor: 'pointer',
+    width:'unset',
+    margin:'0'
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
     fontSize: '14px',
+    overflowX: 'auto',
+
   },
 };
 
