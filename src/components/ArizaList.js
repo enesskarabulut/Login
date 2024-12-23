@@ -5,7 +5,6 @@ function ArizaList({
   onSelect,
   onDelete,
   selectedArizaId,
-  loadArizalar,
   setCurrentPage,
 }) {
   const [loadingId, setLoadingId] = useState(null);

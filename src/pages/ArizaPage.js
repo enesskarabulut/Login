@@ -89,9 +89,6 @@ function ArizaPage() {
     setSelectedArizaId(null);
     setCurrentPage(1);
     setArizalar([]);
-    if (view === 'arizalar' || view === 'Anasayfa') {
-      loadArizalar(filters, 1);
-    }
   };
 
   const handleLoadMore = () => {
@@ -170,7 +167,6 @@ function ArizaPage() {
           <ArizaFilter onFilter={handleFilter} />
           <ArizaList
             setCurrentPage={setCurrentPage}
-            loadArizalar={loadArizalar}
             loading={loading}
             arizalar={arizalar}
             onSelect={(id) => setSelectedArizaId(id)}
