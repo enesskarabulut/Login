@@ -185,6 +185,7 @@ function ArizaPage({setIsAuthenticated}) {
             onSelect={(id) => setSelectedArizaId(id)}
             onDelete={handleDelete}
             selectedArizaId={selectedArizaId}
+            loadArizalar={loadArizalar}
           />
 
           {arizalar.length >= limit * currentPage && (

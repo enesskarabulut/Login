@@ -6,6 +6,8 @@ function ArizaList({
   onDelete,
   selectedArizaId,
   setCurrentPage,
+  loadArizalar,
+  loading
 }) {
   const [loadingId, setLoadingId] = useState(null);
   const [error, setError] = useState(null);
@@ -49,6 +51,7 @@ function ArizaList({
         <button
           onClick={() => {
             setCurrentPage(1);
+            loadArizalar()
           }}
           style={styles.refreshButton}
         >
@@ -76,7 +79,7 @@ function ArizaList({
           </tr>
         </thead>
         <tbody>
-          {arizalar.map((ariza) => (
+          {loading ? <p>Yükleniyor..</p> : arizalar.map((ariza) => (
             <tr key={ariza.id}>
               <td
                 onClick={() => onSelect(ariza.id === selectedArizaId ? null : ariza.id)}
